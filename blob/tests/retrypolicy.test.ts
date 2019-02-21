@@ -1,10 +1,9 @@
-import { URLBuilder } from "@azure/ms-rest-js";
+import { deserializationPolicy, RequestPolicyFactory, URLBuilder } from "@azure/ms-rest-js";
 import * as assert from "assert";
 
-import { RestError, StorageURL } from "../lib";
+import { RestError, TelemetryPolicyFactory, UniqueRequestIDPolicyFactory, BrowserPolicyFactory, RetryPolicyFactory, LoggingPolicyFactory } from "../lib";
 import { Aborter } from "../lib/Aborter";
 import { ContainerURL } from "../lib/ContainerURL";
-import { Pipeline } from "../lib/Pipeline";
 import { getBSU, getUniqueName } from "./utils";
 import { InjectorPolicyFactory } from "./utils/InjectorPolicyFactory";
 
@@ -37,8 +36,7 @@ describe("RetryPolicy", () => {
     });
     const factories = containerURL.pipeline.factories.slice(); // clone factories array
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
-    const injectContainerURL = containerURL.withPipeline(pipeline);
+    const injectContainerURL = containerURL.withPipeline(factories);
 
     const metadata = {
       key0: "val0",
@@ -60,12 +58,18 @@ describe("RetryPolicy", () => {
       containerURL.pipeline.factories[
         containerURL.pipeline.factories.length - 1
       ];
-    const factories = StorageURL.newPipeline(credential, {
-      retryOptions: { maxTries: 3 }
-    }).factories;
+    const factories: RequestPolicyFactory[] = [
+      new TelemetryPolicyFactory(undefined),
+      new UniqueRequestIDPolicyFactory(),
+      new BrowserPolicyFactory(),
+      deserializationPolicy(), // Default deserializationPolicy is provided by protocol layer
+      new RetryPolicyFactory({ maxTries: 3 }),
+      new LoggingPolicyFactory(),
+      credential
+    ];
+
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
-    const injectContainerURL = containerURL.withPipeline(pipeline);
+    const injectContainerURL = containerURL.withPipeline(factories);
 
     let hasError = false;
     try {
@@ -106,12 +110,20 @@ describe("RetryPolicy", () => {
       containerURL.pipeline.factories[
         containerURL.pipeline.factories.length - 1
       ];
-    const factories = StorageURL.newPipeline(credential, {
-      retryOptions: { maxTries: 2, secondaryHost }
-    }).factories;
+
+    const factories: RequestPolicyFactory[] = [
+      new TelemetryPolicyFactory(undefined),
+      new UniqueRequestIDPolicyFactory(),
+      new BrowserPolicyFactory(),
+      deserializationPolicy(), // Default deserializationPolicy is provided by protocol layer
+      new RetryPolicyFactory({ maxTries: 2, secondaryHost }),
+      new LoggingPolicyFactory(),
+      credential
+    ];
+
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
-    const injectContainerURL = containerURL.withPipeline(pipeline);
+
+    const injectContainerURL = containerURL.withPipeline(factories);
 
     let finalRequestURL = "";
     try {

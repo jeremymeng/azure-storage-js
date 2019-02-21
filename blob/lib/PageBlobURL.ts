@@ -1,4 +1,4 @@
-import { HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
+import { HttpClient as IHttpClient, HttpPipelineLogger as IHttpPipelineLogger, HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
 
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
@@ -11,7 +11,7 @@ import {
   IMetadata,
   IPageBlobAccessConditions
 } from "./models";
-import { Pipeline } from "./Pipeline";
+import { Pipeline_ } from "./Pipeline";
 import { URLConstants } from "./utils/constants";
 import { appendToURLPath, setURLParameter } from "./utils/utils.common";
 
@@ -119,8 +119,8 @@ export class PageBlobURL extends BlobURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof PageBlobURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
+    super(url, factories, logger, HTTPClient);
     this.pageBlobContext = new PageBlob(this.storageClientContext);
   }
 
@@ -132,8 +132,8 @@ export class PageBlobURL extends BlobURL {
    * @returns {PageBlobURL}
    * @memberof PageBlobURL
    */
-  public withPipeline(pipeline: Pipeline): PageBlobURL {
-    return new PageBlobURL(this.url, pipeline);
+  public withPipeline(factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient): PageBlobURL {
+    return new PageBlobURL(this.url, factories, logger, HTTPClient);
   }
 
   /**

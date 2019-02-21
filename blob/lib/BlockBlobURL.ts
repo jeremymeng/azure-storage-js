@@ -1,4 +1,4 @@
-import { HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
+import { HttpClient as IHttpClient, HttpPipelineLogger as IHttpPipelineLogger, HttpRequestBody, TransferProgressEvent, RequestPolicyFactory } from "@azure/ms-rest-js";
 
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
@@ -7,9 +7,9 @@ import { ContainerURL } from "./ContainerURL";
 import { BlockBlob } from "./generated/lib/operations";
 import { IRange, rangeToString } from "./IRange";
 import { IBlobAccessConditions, IMetadata } from "./models";
-import { Pipeline } from "./Pipeline";
 import { URLConstants } from "./utils/constants";
 import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { pipeline } from 'stream';
 
 export interface IBlockBlobUploadOptions {
   accessConditions?: IBlobAccessConditions;
@@ -106,8 +106,8 @@ export class BlockBlobURL extends BlobURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof BlockBlobURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
+    super(url, factories, logger, HTTPClient);
     this.blockBlobContext = new BlockBlob(this.storageClientContext);
   }
 
@@ -119,8 +119,8 @@ export class BlockBlobURL extends BlobURL {
    * @returns {BlockBlobURL}
    * @memberof BlockBlobURL
    */
-  public withPipeline(pipeline: Pipeline): BlockBlobURL {
-    return new BlockBlobURL(this.url, pipeline);
+  public withPipeline(factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient): BlockBlobURL {
+    return new BlockBlobURL(this.url, factories, logger, HTTPClient);
   }
 
   /**

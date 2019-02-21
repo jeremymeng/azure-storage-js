@@ -1,10 +1,9 @@
-import { deserializationPolicy, RequestPolicyFactory } from "@azure/ms-rest-js";
+import { HttpClient as IHttpClient, HttpPipelineLogger as IHttpPipelineLogger, deserializationPolicy, RequestPolicyFactory } from "@azure/ms-rest-js";
 
 import { BrowserPolicyFactory } from "./BrowserPolicyFactory";
 import { Credential } from "./credentials/Credential";
 import { StorageClientContext } from "./generated/lib/storageClientContext";
 import { LoggingPolicyFactory } from "./LoggingPolicyFactory";
-import { IHttpClient, IHttpPipelineLogger, Pipeline } from "./Pipeline";
 import { IRetryOptions, RetryPolicyFactory } from "./RetryPolicyFactory";
 import {
   ITelemetryOptions,
@@ -54,7 +53,7 @@ export abstract class StorageURL {
   public static newPipeline(
     credential: Credential,
     pipelineOptions: INewPipelineOptions = {}
-  ): Pipeline {
+  ) {
     // Order is important. Closer to the API at the top & closer to the network at the bottom.
     // The credential's policy factory must appear close to the wire so it can sign any
     // changes made by other factories (like UniqueRequestIDPolicyFactory)
@@ -68,10 +67,11 @@ export abstract class StorageURL {
       credential
     ];
 
-    return new Pipeline(factories, {
+    return {
       HTTPClient: pipelineOptions.httpClient,
+      factories,
       logger: pipelineOptions.logger
-    });
+    };
   }
 
   /**
@@ -81,7 +81,7 @@ export abstract class StorageURL {
    * @type {Pipeline}
    * @memberof StorageURL
    */
-  public readonly pipeline: Pipeline;
+  // public readonly pipeline: Pipeline;
 
   /**
    * Encoded URL string value.
@@ -104,16 +104,18 @@ export abstract class StorageURL {
   /**
    * Creates an instance of StorageURL.
    * @param {string} url
-   * @param {Pipeline} pipeline
    * @memberof StorageURL
    */
-  protected constructor(url: string, pipeline: Pipeline) {
+  protected constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
     // URL should be encoded and only once, protocol layer shouldn't encode URL again
     this.url = escapeURLPath(url);
-    this.pipeline = pipeline;
     this.storageClientContext = new StorageClientContext(
       this.url,
-      pipeline.toServiceClientOptions()
+      {
+        httpClient: HTTPClient,
+        httpPipelineLogger: logger,
+        requestPolicyFactories: factories
+      }
     );
 
     // Override protocol layer's default content-type

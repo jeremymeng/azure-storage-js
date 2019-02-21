@@ -1,4 +1,4 @@
-import { isNode, TransferProgressEvent } from "@azure/ms-rest-js";
+import { HttpClient as IHttpClient, HttpPipelineLogger as IHttpPipelineLogger, isNode, RequestPolicyFactory, TransferProgressEvent } from "@azure/ms-rest-js";
 
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
@@ -7,13 +7,13 @@ import { ContainerURL } from "./ContainerURL";
 import { Blob } from "./generated/lib/operations";
 import { rangeToString } from "./IRange";
 import { IBlobAccessConditions, IMetadata } from "./models";
-import { Pipeline } from "./Pipeline";
 import { StorageURL } from "./StorageURL";
 import {
   DEFAULT_MAX_DOWNLOAD_RETRY_REQUESTS,
   URLConstants
 } from "./utils/constants";
 import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { pipeline } from 'stream';
 
 export interface IBlobDownloadOptions {
   snapshot?: string;
@@ -147,8 +147,8 @@ export class BlobURL extends StorageURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof BlobURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
+    super(url, factories, logger, HTTPClient);
     this.blobContext = new Blob(this.storageClientContext);
   }
 
@@ -160,8 +160,8 @@ export class BlobURL extends StorageURL {
    * @returns {BlobURL}
    * @memberof BlobURL
    */
-  public withPipeline(pipeline: Pipeline): BlobURL {
-    return new BlobURL(this.url, pipeline);
+  public withPipeline(factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient): BlobURL {
+    return new BlobURL(this.url, factories, logger, HTTPClient);
   }
 
   /**

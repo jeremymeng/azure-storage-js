@@ -1,4 +1,4 @@
-import { HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
+import { HttpClient as IHttpClient, HttpPipelineLogger as IHttpPipelineLogger, HttpRequestBody, TransferProgressEvent, RequestPolicyFactory } from "@azure/ms-rest-js";
 
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
@@ -10,7 +10,7 @@ import {
   IBlobAccessConditions,
   IMetadata
 } from "./models";
-import { Pipeline } from "./Pipeline";
+import { Pipeline_ } from "./Pipeline";
 import { URLConstants } from "./utils/constants";
 import { appendToURLPath, setURLParameter } from "./utils/utils.common";
 
@@ -92,8 +92,8 @@ export class AppendBlobURL extends BlobURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof AppendBlobURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
+    super(url, factories, logger, HTTPClient);
     this.appendBlobContext = new AppendBlob(this.storageClientContext);
   }
 
@@ -105,8 +105,8 @@ export class AppendBlobURL extends BlobURL {
    * @returns {AppendBlobURL}
    * @memberof AppendBlobURL
    */
-  public withPipeline(pipeline: Pipeline): AppendBlobURL {
-    return new AppendBlobURL(this.url, pipeline);
+  public withPipeline(factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient): AppendBlobURL {
+    return new AppendBlobURL(this.url, factories, logger, HTTPClient);
   }
 
   /**

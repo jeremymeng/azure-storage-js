@@ -1,8 +1,9 @@
+import { HttpClient as IHttpClient, HttpPipelineLogger as IHttpPipelineLogger, deserializationPolicy, RequestPolicyFactory } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { ListContainersIncludeType } from "./generated/lib/models/index";
 import { Service } from "./generated/lib/operations";
-import { Pipeline } from "./Pipeline";
+import { Pipeline_ } from "./Pipeline";
 import { StorageURL } from "./StorageURL";
 
 export interface IServiceListContainersSegmentOptions {
@@ -57,8 +58,8 @@ export class ServiceURL extends StorageURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof ServiceURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
+    super(url, factories, logger, HTTPClient);
     this.serviceContext = new Service(this.storageClientContext);
   }
 

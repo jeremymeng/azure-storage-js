@@ -1,13 +1,14 @@
-import { HttpResponse } from "@azure/ms-rest-js";
+import { HttpClient as IHttpClient,  HttpResponse, RequestPolicyFactory } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { Container } from "./generated/lib/operations";
 import { IContainerAccessConditions, IMetadata } from "./models";
-import { Pipeline } from "./Pipeline";
+import { Pipeline_, IHttpPipelineLogger } from "./Pipeline";
 import { ServiceURL } from "./ServiceURL";
 import { StorageURL } from "./StorageURL";
 import { ETagNone } from "./utils/constants";
 import { appendToURLPath, truncatedISO8061Date } from "./utils/utils.common";
+import { pipeline } from 'stream';
 
 export interface IContainerCreateOptions {
   metadata?: IMetadata;
@@ -167,8 +168,8 @@ export class ContainerURL extends StorageURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof ContainerURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient) {
+    super(url, factories, logger, HTTPClient);
     this.containerContext = new Container(this.storageClientContext);
   }
 
@@ -180,8 +181,8 @@ export class ContainerURL extends StorageURL {
    * @returns {ContainerURL}
    * @memberof ContainerURL
    */
-  public withPipeline(pipeline: Pipeline): ContainerURL {
-    return new ContainerURL(this.url, pipeline);
+  public withPipeline(factories: RequestPolicyFactory[], logger?: IHttpPipelineLogger, HTTPClient?: IHttpClient): ContainerURL {
+    return new ContainerURL(this.url, factories, logger, HTTPClient);
   }
 
   /**

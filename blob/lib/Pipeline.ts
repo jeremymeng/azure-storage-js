@@ -33,7 +33,7 @@ export {
  * @export
  * @interface IPipelineOptions
  */
-export interface IPipelineOptions {
+export interface IPipelineOptions_ {
   logger?: IHttpPipelineLogger;
   HTTPClient?: IHttpClient;
 }
@@ -48,9 +48,9 @@ export interface IPipelineOptions {
  * @export
  * @class Pipeline
  */
-export class Pipeline {
+export class Pipeline_ {
   public readonly factories: RequestPolicyFactory[];
-  public readonly options: IPipelineOptions;
+  public readonly options: IPipelineOptions_;
 
   /**
    * Creates an instance of Pipeline. Customize HTTPClient by implementing IHttpClient interface.
@@ -61,7 +61,7 @@ export class Pipeline {
    */
   constructor(
     factories: RequestPolicyFactory[],
-    options: IPipelineOptions = {}
+    options: IPipelineOptions_ = {}
   ) {
     this.factories = factories;
     this.options = options;
