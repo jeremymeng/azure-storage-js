@@ -35,9 +35,13 @@ describe("RetryPolicy", () => {
         );
       }
     });
-    const factories = containerURL.pipeline.factories.slice(); // clone factories array
+    let factories = containerURL.pipeline.requestPolicyFactories || [];
+    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    factories = factories.slice();
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = {
+      requestPolicyFactories: factories
+    };
     const injectContainerURL = containerURL.withPipeline(pipeline);
 
     const metadata = {
@@ -56,16 +60,20 @@ describe("RetryPolicy", () => {
       return new RestError("Server Internal Error", "ServerInternalError", 500);
     });
 
-    const credential =
-      containerURL.pipeline.factories[
-        containerURL.pipeline.factories.length - 1
-      ];
-    const factories = StorageURL.newPipeline(credential, {
-      retryOptions: { maxTries: 3 }
-    }).factories;
+    let factories = containerURL.pipeline.requestPolicyFactories || [];
+    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    const credential = factories[factories.length - 1];
+    factories = StorageURL.newPipeline(credential,
+      undefined,
+      undefined,
+      { maxTries: 3 }
+    ).requestPolicyFactories || [];
+    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
-    const injectContainerURL = containerURL.withPipeline(pipeline);
+    const options: Pipeline = {
+      requestPolicyFactories: factories
+    };
+    const injectContainerURL = containerURL.withPipeline(options);
 
     let hasError = false;
     try {
@@ -102,16 +110,19 @@ describe("RetryPolicy", () => {
     hostParts.unshift(secondaryAccount);
     const secondaryHost = hostParts.join(".");
 
-    const credential =
-      containerURL.pipeline.factories[
-        containerURL.pipeline.factories.length - 1
-      ];
-    const factories = StorageURL.newPipeline(credential, {
-      retryOptions: { maxTries: 2, secondaryHost }
-    }).factories;
+    let factories = containerURL.pipeline.requestPolicyFactories || [];
+    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    const credential = factories[factories.length - 1];
+    factories = StorageURL.newPipeline(credential,
+      undefined,
+      undefined,
+      { maxTries: 2, secondaryHost }
+    ).requestPolicyFactories || [];
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
-    const injectContainerURL = containerURL.withPipeline(pipeline);
+    const options: Pipeline = {
+      requestPolicyFactories: factories
+    }
+    const injectContainerURL = containerURL.withPipeline(options);
 
     let finalRequestURL = "";
     try {

@@ -1,4 +1,4 @@
-import { deserializationPolicy, RequestPolicyFactory } from "@azure/ms-rest-js";
+import { deserializationPolicy } from "@azure/ms-rest-js";
 
 import { BrowserPolicyFactory } from "./BrowserPolicyFactory";
 import { Credential } from "./credentials/Credential";
@@ -16,26 +16,6 @@ import { escapeURLPath } from "./utils/utils.common";
 export { deserializationPolicy };
 
 /**
- * Option interface for Pipeline.newPipeline method.
- *
- * @export
- * @interface INewPipelineOptions
- */
-export interface INewPipelineOptions {
-  /**
-   * Telemetry configures the built-in telemetry policy behavior.
-   *
-   * @type {ITelemetryOptions}
-   * @memberof INewPipelineOptions
-   */
-  telemetry?: ITelemetryOptions;
-  retryOptions?: IRetryOptions;
-
-  logger?: IHttpPipelineLogger;
-  httpClient?: IHttpClient;
-}
-
-/**
  * A ServiceURL represents a based URL class for ServiceURL, ContainerURL and etc.
  *
  * @export
@@ -43,35 +23,41 @@ export interface INewPipelineOptions {
  */
 export abstract class StorageURL {
   /**
-   * A static method used to create a new Pipeline object with Credential provided.
+   * A static method used to create a new Pipeline (pipeline) object with Credential provided.
    *
    * @static
-   * @param {Credential} credential Such as AnonymousCredential, SharedKeyCredential or TokenCredential.
-   * @param {INewPipelineOptions} [pipelineOptions] Optional. Options.
-   * @returns {Pipeline} A new Pipeline object.
-   * @memberof Pipeline
+   * @param {Credential} credential credential Such as AnonymousCredential, SharedKeyCredential or TokenCredential.
+   * @param {IHttpClient} [httpClient] the HttpClient that will be used to send HTTP requests.
+   * @param {ITelemetryOptions} [telemetry] telemetry options
+   * @param {IRetryOptions} [retryOptions] retry options
+   * @param {IHttpPipelineLogger} [httpPipelineLogger] the HttpPipelineLogger that can be used to debug RequestPolicies within the HTTP pipeline.
+   * @returns {Pipeline} a new Pipeline object
+   * @memberof StorageURL
    */
   public static newPipeline(
     credential: Credential,
-    pipelineOptions: INewPipelineOptions = {}
-  ): Pipeline {
+    httpClient?: IHttpClient,
+    telemetry?: ITelemetryOptions,
+    retryOptions?: IRetryOptions,
+    httpPipelineLogger?: IHttpPipelineLogger): Pipeline {
     // Order is important. Closer to the API at the top & closer to the network at the bottom.
     // The credential's policy factory must appear close to the wire so it can sign any
     // changes made by other factories (like UniqueRequestIDPolicyFactory)
-    const factories: RequestPolicyFactory[] = [
-      new TelemetryPolicyFactory(pipelineOptions.telemetry),
+    const requestPolicyFactories = [
+      new TelemetryPolicyFactory(telemetry),
       new UniqueRequestIDPolicyFactory(),
       new BrowserPolicyFactory(),
       deserializationPolicy(), // Default deserializationPolicy is provided by protocol layer
-      new RetryPolicyFactory(pipelineOptions.retryOptions),
+      new RetryPolicyFactory(retryOptions),
       new LoggingPolicyFactory(),
       credential
     ];
 
-    return new Pipeline(factories, {
-      HTTPClient: pipelineOptions.httpClient,
-      logger: pipelineOptions.logger
-    });
+    return {
+      httpClient,
+      httpPipelineLogger,
+      requestPolicyFactories,
+    };
   }
 
   /**
@@ -113,7 +99,11 @@ export abstract class StorageURL {
     this.pipeline = pipeline;
     this.storageClientContext = new StorageClientContext(
       this.url,
-      pipeline.toServiceClientOptions()
+      {
+        httpClient: pipeline.httpClient,
+        httpPipelineLogger: pipeline.httpPipelineLogger,
+        requestPolicyFactories: pipeline.requestPolicyFactories
+      }
     );
 
     // Override protocol layer's default content-type

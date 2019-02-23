@@ -29,10 +29,11 @@ export function getGenericBSU(
   }
 
   const credentials = new SharedKeyCredential(accountName, accountKey);
-  const pipeline = StorageURL.newPipeline(credentials, {
-    // Enable logger when debugging
+  const pipeline = StorageURL.newPipeline(credentials
+    // Enable telemetry option/retry option/custom logger/custom httpclient by passing them as arguments, e.g.,
     // logger: new ConsoleHttpPipelineLogger(HttpPipelineLogLevel.INFO)
-  });
+  );
+
   const blobPrimaryURL = `https://${accountName}${accountNameSuffix}.blob.core.windows.net/`;
   return new ServiceURL(blobPrimaryURL, pipeline);
 }
