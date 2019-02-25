@@ -26,11 +26,11 @@ export function getGenericBSU(
     accountSAS = accountSAS.startsWith("?") ? accountSAS : `?${accountSAS}`;
   }
 
-  const credentials = new AnonymousCredential();
-  const pipeline = StorageURL.newPipeline(credentials
+  const credential = new AnonymousCredential();
+  const pipeline = StorageURL.newPipeline(credential, {
     // Enable telemetry option/retry option/custom logger/custom httpclient by passing them as arguments, e.g.,
     // logger: new ConsoleHttpPipelineLogger(HttpPipelineLogLevel.INFO)
-  );
+  });
 
   const blobPrimaryURL = `https://${accountName}${accountNameSuffix}.blob.core.windows.net${accountSAS}`;
   return new ServiceURL(blobPrimaryURL, pipeline);

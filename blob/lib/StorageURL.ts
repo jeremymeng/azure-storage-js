@@ -16,6 +16,26 @@ import { escapeURLPath } from "./utils/utils.common";
 export { deserializationPolicy };
 
 /**
+ * Option interface for Pipeline.newPipeline method.
+ *
+ * @export
+ * @interface INewPipelineOptions
+ */
+export interface INewPipelineOptions {
+  /**
+   * Telemetry configures the built-in telemetry policy behavior.
+   *
+   * @type {ITelemetryOptions}
+   * @memberof INewPipelineOptions
+   */
+  telemetry?: ITelemetryOptions;
+  retryOptions?: IRetryOptions;
+
+  logger?: IHttpPipelineLogger;
+  httpClient?: IHttpClient;
+}
+
+/**
  * A ServiceURL represents a based URL class for ServiceURL, ContainerURL and etc.
  *
  * @export
@@ -23,39 +43,34 @@ export { deserializationPolicy };
  */
 export abstract class StorageURL {
   /**
-   * A static method used to create a new Pipeline (pipeline) object with Credential provided.
+   * A static method used to create a new Pipeline object with Credential provided.
    *
    * @static
-   * @param {Credential} credential credential Such as AnonymousCredential, SharedKeyCredential or TokenCredential.
-   * @param {IHttpClient} [httpClient] the HttpClient that will be used to send HTTP requests.
-   * @param {ITelemetryOptions} [telemetry] telemetry options
-   * @param {IRetryOptions} [retryOptions] retry options
-   * @param {IHttpPipelineLogger} [httpPipelineLogger] the HttpPipelineLogger that can be used to debug RequestPolicies within the HTTP pipeline.
-   * @returns {Pipeline} a new Pipeline object
+   * @param {Credential} credential Such as AnonymousCredential, SharedKeyCredential or TokenCredential.
+   * @param {INewPipelineOptions} [pipelineOptions] optional options to create the Pipeline.
+   * @returns {Pipeline} A new Pipeline object
    * @memberof StorageURL
    */
   public static newPipeline(
     credential: Credential,
-    httpClient?: IHttpClient,
-    telemetry?: ITelemetryOptions,
-    retryOptions?: IRetryOptions,
-    httpPipelineLogger?: IHttpPipelineLogger): Pipeline {
+    pipelineOptions: INewPipelineOptions = {}
+    ): Pipeline {
     // Order is important. Closer to the API at the top & closer to the network at the bottom.
     // The credential's policy factory must appear close to the wire so it can sign any
     // changes made by other factories (like UniqueRequestIDPolicyFactory)
     const requestPolicyFactories = [
-      new TelemetryPolicyFactory(telemetry),
+      new TelemetryPolicyFactory(pipelineOptions.telemetry),
       new UniqueRequestIDPolicyFactory(),
       new BrowserPolicyFactory(),
       deserializationPolicy(), // Default deserializationPolicy is provided by protocol layer
-      new RetryPolicyFactory(retryOptions),
+      new RetryPolicyFactory(pipelineOptions.retryOptions),
       new LoggingPolicyFactory(),
       credential
     ];
 
     return {
-      httpClient,
-      httpPipelineLogger,
+      httpClient: pipelineOptions.httpClient,
+      httpPipelineLogger: pipelineOptions.logger,
       requestPolicyFactories,
     };
   }

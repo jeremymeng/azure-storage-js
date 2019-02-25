@@ -63,12 +63,10 @@ describe("RetryPolicy", () => {
     let factories = containerURL.pipeline.requestPolicyFactories || [];
     assert.ok(factories.length > 1, "Pipeline factories should not be empty");
     const credential = factories[factories.length - 1];
-    factories = StorageURL.newPipeline(credential,
-      undefined,
-      undefined,
-      { maxTries: 3 }
-    ).requestPolicyFactories || [];
-    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    factories = StorageURL.newPipeline(credential, {
+      retryOptions: { maxTries: 3 }
+    }).requestPolicyFactories || [];
+    assert.ok(factories.length > 1, "The new Pipeline factories should not be empty");
     factories.push(injector);
     const options: Pipeline = {
       requestPolicyFactories: factories
@@ -113,11 +111,10 @@ describe("RetryPolicy", () => {
     let factories = containerURL.pipeline.requestPolicyFactories || [];
     assert.ok(factories.length > 1, "Pipeline factories should not be empty");
     const credential = factories[factories.length - 1];
-    factories = StorageURL.newPipeline(credential,
-      undefined,
-      undefined,
-      { maxTries: 2, secondaryHost }
-    ).requestPolicyFactories || [];
+    factories = StorageURL.newPipeline(credential, {
+      retryOptions: { maxTries: 2, secondaryHost }
+    }).requestPolicyFactories || [];
+    assert.ok(factories.length > 1, "The new Pipeline factories should not be empty");
     factories.push(injector);
     const options: Pipeline = {
       requestPolicyFactories: factories
