@@ -35,8 +35,7 @@ describe("RetryPolicy", () => {
         );
       }
     });
-    let factories = containerURL.pipeline.requestPolicyFactories || [];
-    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    let factories = containerURL.pipeline.requestPolicyFactories;
     factories = factories.slice();
     factories.push(injector);
     const pipeline: Pipeline = {
@@ -60,13 +59,11 @@ describe("RetryPolicy", () => {
       return new RestError("Server Internal Error", "ServerInternalError", 500);
     });
 
-    let factories = containerURL.pipeline.requestPolicyFactories || [];
-    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    let factories = containerURL.pipeline.requestPolicyFactories;
     const credential = factories[factories.length - 1];
     factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 3 }
-    }).requestPolicyFactories || [];
-    assert.ok(factories.length > 1, "The new Pipeline factories should not be empty");
+    }).requestPolicyFactories;
     factories.push(injector);
     const options: Pipeline = {
       requestPolicyFactories: factories
@@ -108,13 +105,11 @@ describe("RetryPolicy", () => {
     hostParts.unshift(secondaryAccount);
     const secondaryHost = hostParts.join(".");
 
-    let factories = containerURL.pipeline.requestPolicyFactories || [];
-    assert.ok(factories.length > 1, "Pipeline factories should not be empty");
+    let factories = containerURL.pipeline.requestPolicyFactories;
     const credential = factories[factories.length - 1];
     factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 2, secondaryHost }
-    }).requestPolicyFactories || [];
-    assert.ok(factories.length > 1, "The new Pipeline factories should not be empty");
+    }).requestPolicyFactories;
     factories.push(injector);
     const options: Pipeline = {
       requestPolicyFactories: factories

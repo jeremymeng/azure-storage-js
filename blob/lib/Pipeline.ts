@@ -8,7 +8,7 @@ import {
   RequestPolicy,
   RequestPolicyFactory,
   RequestPolicyOptions,
-  ServiceClientOptions as Pipeline,
+  ServiceClientOptions,
   WebResource
 } from "@azure/ms-rest-js";
 
@@ -21,10 +21,12 @@ export {
   HttpPipelineLogLevel,
   HttpOperationResponse,
   BaseRequestPolicy,
-  Pipeline,
   RequestPolicyFactory,
   RequestPolicy,
   RequestPolicyOptions,
   WebResource
 };
 
+export interface Pipeline extends ServiceClientOptions {
+    requestPolicyFactories: RequestPolicyFactory[];
+}

@@ -1,4 +1,4 @@
-import { deserializationPolicy } from "@azure/ms-rest-js";
+import { deserializationPolicy, RequestPolicyFactory } from "@azure/ms-rest-js";
 
 import { BrowserPolicyFactory } from "./BrowserPolicyFactory";
 import { Credential } from "./credentials/Credential";
@@ -54,11 +54,11 @@ export abstract class StorageURL {
   public static newPipeline(
     credential: Credential,
     pipelineOptions: INewPipelineOptions = {}
-    ): Pipeline {
+  ): Pipeline {
     // Order is important. Closer to the API at the top & closer to the network at the bottom.
     // The credential's policy factory must appear close to the wire so it can sign any
     // changes made by other factories (like UniqueRequestIDPolicyFactory)
-    const requestPolicyFactories = [
+    const requestPolicyFactories: RequestPolicyFactory[] = [
       new TelemetryPolicyFactory(pipelineOptions.telemetry),
       new UniqueRequestIDPolicyFactory(),
       new BrowserPolicyFactory(),
