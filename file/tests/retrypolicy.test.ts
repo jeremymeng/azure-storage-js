@@ -34,9 +34,9 @@ describe("RetryPolicy", () => {
         );
       }
     });
-    const factories = shareURL.pipeline.factories.slice(); // clone factories array
+    const factories = shareURL.pipeline.requestPolicyFactories.slice(); // clone factories array
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectShareURL = shareURL.withPipeline(pipeline);
 
     const metadata = {
@@ -56,12 +56,12 @@ describe("RetryPolicy", () => {
     });
 
     const credential =
-      shareURL.pipeline.factories[shareURL.pipeline.factories.length - 1];
+      shareURL.pipeline.requestPolicyFactories[shareURL.pipeline.requestPolicyFactories.length - 1];
     const factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 3 }
-    }).factories;
+    }).requestPolicyFactories;
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectShareURL = shareURL.withPipeline(pipeline);
 
     let hasError = false;

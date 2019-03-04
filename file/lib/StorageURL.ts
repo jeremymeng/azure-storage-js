@@ -49,7 +49,7 @@ export abstract class StorageURL {
    * @param {Credential} credential Such as AnonymousCredential, SharedKeyCredential.
    * @param {INewPipelineOptions} [pipelineOptions] Optional. Options.
    * @returns {Pipeline} A new Pipeline object.
-   * @memberof Pipeline
+   * @memberof StorageURL
    */
   public static newPipeline(
     credential: Credential,
@@ -58,7 +58,7 @@ export abstract class StorageURL {
     // Order is important. Closer to the API at the top & closer to the network at the bottom.
     // The credential's policy factory must appear close to the wire so it can sign any
     // changes made by other factories (like UniqueRequestIDPolicyFactory)
-    const factories: RequestPolicyFactory[] = [
+    const requestPolicyFactories: RequestPolicyFactory[] = [
       new TelemetryPolicyFactory(pipelineOptions.telemetry),
       new UniqueRequestIDPolicyFactory(),
       new BrowserPolicyFactory(),
@@ -68,10 +68,11 @@ export abstract class StorageURL {
       credential
     ];
 
-    return new Pipeline(factories, {
-      HTTPClient: pipelineOptions.httpClient,
-      logger: pipelineOptions.logger
-    });
+    return  {
+      httpClient: pipelineOptions.httpClient,
+      httpPipelineLogger: pipelineOptions.logger,
+      requestPolicyFactories
+    };
   }
 
   /**
@@ -114,7 +115,11 @@ export abstract class StorageURL {
     this.pipeline = pipeline;
     this.storageClientContext = new StorageClientContext(
       this.url,
-      pipeline.toServiceClientOptions()
+      {
+        httpClient: pipeline.httpClient,
+        httpPipelineLogger: pipeline.httpPipelineLogger,
+        requestPolicyFactories: pipeline.requestPolicyFactories
+      }
     );
 
     // Remove the default content-type in generated code of StorageClientContext
