@@ -35,9 +35,9 @@ describe("RetryPolicy", () => {
         );
       }
     });
-    const factories = queueURL.pipeline.factories.slice(); // clone factories array
+    const factories = queueURL.pipeline.requestPolicyFactories.slice(); // clone factories array
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectqueueURL = queueURL.withPipeline(pipeline);
 
     const metadata = {
@@ -57,14 +57,14 @@ describe("RetryPolicy", () => {
     });
 
     const credential =
-      queueURL.pipeline.factories[
-        queueURL.pipeline.factories.length - 1
+      queueURL.pipeline.requestPolicyFactories[
+        queueURL.pipeline.requestPolicyFactories.length - 1
       ];
     const factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 3 }
-    }).factories;
+    }).requestPolicyFactories;
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectqueueURL = queueURL.withPipeline(pipeline);
 
     let hasError = false;
@@ -103,14 +103,14 @@ describe("RetryPolicy", () => {
     const secondaryHost = hostParts.join(".");
 
     const credential =
-      queueURL.pipeline.factories[
-        queueURL.pipeline.factories.length - 1
+      queueURL.pipeline.requestPolicyFactories[
+        queueURL.pipeline.requestPolicyFactories.length - 1
       ];
     const factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 2, secondaryHost }
-    }).factories;
+    }).requestPolicyFactories;
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectqueueURL = queueURL.withPipeline(pipeline);
 
     let finalRequestURL = "";
