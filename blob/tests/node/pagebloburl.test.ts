@@ -1,26 +1,21 @@
 import * as assert from "assert";
 
 import { Aborter } from "../../lib/Aborter";
-import { BlobURL } from "../../lib/BlobURL";
-import { ContainerURL } from "../../lib/ContainerURL";
-import { PageBlobURL } from "../../lib/PageBlobURL";
 import { getBSU, getUniqueName, sleep } from "../utils";
 
 describe("PageBlobURL", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName: string = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let pageBlobURL = PageBlobURL.fromBlobURL(blobURL);
+  let pageBlobURL = containerURL.createPageBlobURL(blobName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    pageBlobURL = PageBlobURL.fromBlobURL(blobURL);
+    pageBlobURL = containerURL.createPageBlobURL(blobName);
   });
 
   afterEach(async () => {
@@ -38,8 +33,7 @@ describe("PageBlobURL", () => {
     let snapshotResult = await pageBlobURL.createSnapshot(Aborter.none);
     assert.ok(snapshotResult.snapshot);
 
-    const destPageBlobURL = PageBlobURL.fromContainerURL(
-      containerURL,
+    const destPageBlobURL = containerURL.createPageBlobURL(
       getUniqueName("page")
     );
 

@@ -1,6 +1,5 @@
 import { Aborter } from "../lib/Aborter";
 import { BlockBlobURL } from "../lib/BlockBlobURL";
-import { ContainerURL } from "../lib/ContainerURL";
 import { getBSU, getUniqueName } from "./utils/index";
 import * as assert from "assert";
 import { appendToURLPath } from "../lib/utils/utils.common";
@@ -8,7 +7,7 @@ import { appendToURLPath } from "../lib/utils/utils.common";
 describe("Special Naming Tests", () => {
   const serviceURL = getBSU();
   const containerName: string = getUniqueName("1container-with-dash");
-  const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  const containerURL = serviceURL.createContainerURL(containerName);
 
   before(async () => {
     await containerURL.create(Aborter.none);
@@ -20,7 +19,7 @@ describe("Special Naming Tests", () => {
 
   it("Should work with special container and blob names with spaces", async () => {
     const blobName: string = getUniqueName("blob empty");
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     const response = await containerURL.listBlobFlatSegment(
@@ -53,7 +52,7 @@ describe("Special Naming Tests", () => {
 
   it("Should work with special container and blob names with /", async () => {
     const blobName: string = getUniqueName("////blob/empty /another");
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -88,7 +87,7 @@ describe("Special Naming Tests", () => {
 
   it("Should work with special container and blob names uppercase", async () => {
     const blobName: string = getUniqueName("////Upper/blob/empty /another");
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -125,7 +124,7 @@ describe("Special Naming Tests", () => {
     const blobName: string = getUniqueName(
       "////Upper/blob/empty /another 汉字"
     );
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -164,7 +163,7 @@ describe("Special Naming Tests", () => {
     const blobName: string = getUniqueName(
       "汉字. special ~!@#$%^&*()_+`1234567890-={}|[]\\:\";'<>?,/'"
     );
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -210,10 +209,8 @@ describe("Special Naming Tests", () => {
   it("Should work with special blob name Russian URI encoded", async () => {
     const blobName: string = getUniqueName("ру́сский язы́к");
     const blobNameEncoded: string = encodeURIComponent(blobName);
-    const blockBlobURL = BlockBlobURL.fromContainerURL(
-      containerURL,
-      blobNameEncoded
-    );
+    const blockBlobURL = containerURL.createBlockBlobURL(blobNameEncoded);
+
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -229,7 +226,7 @@ describe("Special Naming Tests", () => {
 
   it("Should work with special blob name Russian", async () => {
     const blobName: string = getUniqueName("ру́сский язы́к");
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -265,8 +262,7 @@ describe("Special Naming Tests", () => {
   it("Should work with special blob name Arabic URI encoded", async () => {
     const blobName: string = getUniqueName("عربي/عربى");
     const blobNameEncoded: string = encodeURIComponent(blobName);
-    const blockBlobURL = BlockBlobURL.fromContainerURL(
-      containerURL,
+    const blockBlobURL = containerURL.createBlockBlobURL(
       blobNameEncoded
     );
 
@@ -284,7 +280,7 @@ describe("Special Naming Tests", () => {
 
   it("Should work with special blob name Arabic", async () => {
     const blobName: string = getUniqueName("عربي/عربى");
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -320,10 +316,7 @@ describe("Special Naming Tests", () => {
   it("Should work with special blob name Japanese URI encoded", async () => {
     const blobName: string = getUniqueName("にっぽんご/にほんご");
     const blobNameEncoded: string = encodeURIComponent(blobName);
-    const blockBlobURL = BlockBlobURL.fromContainerURL(
-      containerURL,
-      blobNameEncoded
-    );
+    const blockBlobURL = containerURL.createBlockBlobURL(blobNameEncoded);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);
@@ -339,7 +332,7 @@ describe("Special Naming Tests", () => {
 
   it("Should work with special blob name Japanese", async () => {
     const blobName: string = getUniqueName("にっぽんご/にほんご");
-    const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, blobName);
+    const blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
     await blockBlobURL.upload(Aborter.none, "A", 1);
     await blockBlobURL.getProperties(Aborter.none);

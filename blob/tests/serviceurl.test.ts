@@ -1,7 +1,6 @@
 import * as assert from "assert";
 
 import { Aborter } from "../lib/Aborter";
-import { ContainerURL } from "../lib/ContainerURL";
 import { ServiceURL } from "../lib/ServiceURL";
 import { getAlternateBSU, getBSU, getUniqueName, wait } from "./utils";
 
@@ -31,12 +30,10 @@ describe("ServiceURL", () => {
     const containerNamePrefix = getUniqueName("container");
     const containerName1 = `${containerNamePrefix}x1`;
     const containerName2 = `${containerNamePrefix}x2`;
-    const containerURL1 = ContainerURL.fromServiceURL(
-      serviceURL,
+    const containerURL1 = serviceURL.createContainerURL(
       containerName1
     );
-    const containerURL2 = ContainerURL.fromServiceURL(
-      serviceURL,
+    const containerURL2 = serviceURL.createContainerURL(
       containerName2
     );
     await containerURL1.create(Aborter.none, { metadata: { key: "val" } });

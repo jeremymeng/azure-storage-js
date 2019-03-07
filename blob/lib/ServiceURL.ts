@@ -1,9 +1,12 @@
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
+import { ContainerURL } from "./ContainerURL";
+import { Credential } from "./credentials/Credential";
 import { ListContainersIncludeType } from "./generated/lib/models/index";
 import { Service } from "./generated/lib/operations";
 import { Pipeline } from "./Pipeline";
-import { StorageURL } from "./StorageURL";
+import { INewPipelineOptions, StorageURL } from "./StorageURL";
+import { appendToURLPath } from "./utils/utils.common";
 
 export interface IServiceListContainersSegmentOptions {
   /**
@@ -53,12 +56,17 @@ export class ServiceURL extends StorageURL {
    * @param {string} url A URL string pointing to Azure Storage blob service, such as
    *                     "https://myaccount.blob.core.windows.net". You can append a SAS
    *                     if using AnonymousCredential, such as "https://myaccount.blob.core.windows.net?sasString".
-   * @param {Pipeline} pipeline Call StorageURL.newPipeline() to create a default
+   * @param {Credential | Pipeline} credentialOrPipeline Call StorageURL.newPipeline() to create a default
    *                            pipeline, or provide a customized pipeline.
    * @memberof ServiceURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, credentialOrPipeline: Credential | Pipeline, pipelineOptions?: INewPipelineOptions) {
+    if (credentialOrPipeline instanceof Credential) {
+      const pipeline = StorageURL.newPipeline(credentialOrPipeline, pipelineOptions);
+      super(url, pipeline);
+    } else {
+      super(url, credentialOrPipeline);
+    }
     this.serviceContext = new Service(this.storageClientContext);
   }
 
@@ -72,6 +80,13 @@ export class ServiceURL extends StorageURL {
    */
   public withPipeline(pipeline: Pipeline): ServiceURL {
     return new ServiceURL(this.url, pipeline);
+  }
+
+  public createContainerURL(containerName: string): ContainerURL {
+    return new ContainerURL(
+      appendToURLPath(this.url, encodeURIComponent(containerName)),
+      this.pipeline
+    );
   }
 
   /**

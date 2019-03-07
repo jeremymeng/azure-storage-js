@@ -1,26 +1,21 @@
 import * as assert from "assert";
 
 import { Aborter } from "../../lib/Aborter";
-import { BlobURL } from "../../lib/BlobURL";
-import { BlockBlobURL } from "../../lib/BlockBlobURL";
-import { ContainerURL } from "../../lib/ContainerURL";
 import { bodyToString, getBSU, getUniqueName } from "../utils";
 
 describe("BlockBlobURL Node.js only", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName: string = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+  let blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+    blockBlobURL = containerURL.createBlockBlobURL(blobName);
   });
 
   afterEach(async () => {
@@ -32,7 +27,7 @@ describe("BlockBlobURL Node.js only", () => {
     const bodyBuffer = Buffer.from(body);
 
     await blockBlobURL.upload(Aborter.none, bodyBuffer, body.length);
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await blockBlobURL.download(Aborter.none, 0);
 
     const downloadedBody = await new Promise((resolve, reject) => {
       const buffer: string[] = [];
@@ -51,7 +46,7 @@ describe("BlockBlobURL Node.js only", () => {
   it("upload with Chinese string body and default parameters", async () => {
     const body: string = getUniqueName("randomstring你好");
     await blockBlobURL.upload(Aborter.none, body, Buffer.byteLength(body));
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await blockBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, Buffer.byteLength(body)),
       body

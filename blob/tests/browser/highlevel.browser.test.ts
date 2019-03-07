@@ -1,9 +1,6 @@
 import * as assert from "assert";
 
 import { Aborter } from "../../lib/Aborter";
-import { BlobURL } from "../../lib/BlobURL";
-import { BlockBlobURL } from "../../lib/BlockBlobURL";
-import { ContainerURL } from "../../lib/ContainerURL";
 import { uploadBrowserDataToBlockBlob } from "../../lib/highlevel.browser";
 import {
   arrayBufferEqual,
@@ -20,10 +17,9 @@ import {
 describe("Highelvel", () => {
   const serviceURL = getBSU();
   let containerName = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+  let blockBlobURL = containerURL.createBlockBlobURL(blobName);
   let tempFile1: File;
   const tempFile1Length: number = 257 * 1024 * 1024 - 1;
   let tempFile2: File;
@@ -31,11 +27,10 @@ describe("Highelvel", () => {
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+    blockBlobURL = containerURL.createBlockBlobURL(blobName);
   });
 
   afterEach(async () => {

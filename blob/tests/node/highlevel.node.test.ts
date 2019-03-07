@@ -3,7 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { PassThrough } from "stream";
 
-import { BlobURL, BlockBlobURL, ContainerURL } from "../../lib";
 import { Aborter } from "../../lib/Aborter";
 import {
   downloadBlobToBuffer,
@@ -22,10 +21,9 @@ import {
 describe("Highlevel", () => {
   const serviceURL = getBSU();
   let containerName = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+  let blockBlobURL = containerURL.createBlockBlobURL(blobName);
   let tempFileSmall: string;
   let tempFileSmallLength: number;
   let tempFileLarge: string;
@@ -34,11 +32,10 @@ describe("Highlevel", () => {
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+    blockBlobURL = containerURL.createBlockBlobURL(blobName);
   });
 
   afterEach(async () => {

@@ -1,26 +1,21 @@
 import * as assert from "assert";
 
 import { Aborter } from "../lib/Aborter";
-import { BlobURL } from "../lib/BlobURL";
-import { BlockBlobURL } from "../lib/BlockBlobURL";
-import { ContainerURL } from "../lib/ContainerURL";
 import { base64encode, bodyToString, getBSU, getUniqueName } from "./utils";
 
 describe("BlockBlobURL", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName: string = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+  let blockBlobURL = containerURL.createBlockBlobURL(blobName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+    blockBlobURL = containerURL.createBlockBlobURL(blobName);
   });
 
   afterEach(async () => {
@@ -30,7 +25,7 @@ describe("BlockBlobURL", () => {
   it("upload with string body and default parameters", async () => {
     const body: string = getUniqueName("randomstring");
     await blockBlobURL.upload(Aborter.none, body, body.length);
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await blockBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(await bodyToString(result, body.length), body);
   });
 
@@ -51,7 +46,7 @@ describe("BlockBlobURL", () => {
       blobHTTPHeaders: options,
       metadata: options.metadata
     });
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await blockBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(await bodyToString(result, body.length), body);
     assert.deepStrictEqual(result.cacheControl, options.blobCacheControl);
     assert.deepStrictEqual(
@@ -100,8 +95,7 @@ describe("BlockBlobURL", () => {
       // tslint:disable-next-line:no-empty
     } catch (err) {}
 
-    const newBlockBlobURL = BlockBlobURL.fromContainerURL(
-      containerURL,
+    const newBlockBlobURL = containerURL.createBlockBlobURL(
       getUniqueName("newblockblob")
     );
     await newBlockBlobURL.stageBlockFromURL(
@@ -131,8 +125,7 @@ describe("BlockBlobURL", () => {
       // tslint:disable-next-line:no-empty
     } catch (err) {}
 
-    const newBlockBlobURL = BlockBlobURL.fromContainerURL(
-      containerURL,
+    const newBlockBlobURL = containerURL.createBlockBlobURL(
       getUniqueName("newblockblob")
     );
     await newBlockBlobURL.stageBlockFromURL(
@@ -253,7 +246,7 @@ describe("BlockBlobURL", () => {
     assert.equal(listResponse.committedBlocks![1].name, base64encode("2"));
     assert.equal(listResponse.committedBlocks![1].size, body.length);
 
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await blockBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, body.repeat(2).length),
       body.repeat(2)

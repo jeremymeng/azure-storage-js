@@ -3,7 +3,6 @@ import * as assert from "assert";
 
 import { RestError, StorageURL } from "../lib";
 import { Aborter } from "../lib/Aborter";
-import { ContainerURL } from "../lib/ContainerURL";
 import { Pipeline } from "../lib/Pipeline";
 import { getBSU, getUniqueName } from "./utils";
 import { InjectorPolicyFactory } from "./utils/InjectorPolicyFactory";
@@ -11,11 +10,11 @@ import { InjectorPolicyFactory } from "./utils/InjectorPolicyFactory";
 describe("RetryPolicy", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
   });
 

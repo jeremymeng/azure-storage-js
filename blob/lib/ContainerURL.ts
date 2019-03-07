@@ -1,10 +1,13 @@
 import { HttpResponse } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
+import { AppendBlobURL } from "./AppendBlobURL";
+import { BlobURL } from "./BlobURL";
+import { BlockBlobURL } from "./BlockBlobURL";
 import { Container } from "./generated/lib/operations";
 import { IContainerAccessConditions, IMetadata } from "./models";
+import { PageBlobURL } from "./PageBlobURL";
 import { Pipeline } from "./Pipeline";
-import { ServiceURL } from "./ServiceURL";
 import { StorageURL } from "./StorageURL";
 import { ETagNone } from "./utils/constants";
 import { appendToURLPath, truncatedISO8061Date } from "./utils/utils.common";
@@ -133,22 +136,6 @@ export interface IContainerListBlobsSegmentOptions {
  */
 export class ContainerURL extends StorageURL {
   /**
-   * Creates a ContainerURL object from ServiceURL
-   *
-   * @param serviceURL A ServiceURL object
-   * @param containerName A container name
-   */
-  public static fromServiceURL(
-    serviceURL: ServiceURL,
-    containerName: string
-  ): ContainerURL {
-    return new ContainerURL(
-      appendToURLPath(serviceURL.url, encodeURIComponent(containerName)),
-      serviceURL.pipeline
-    );
-  }
-
-  /**
    * containerContext provided by protocol layer.
    *
    * @private
@@ -207,6 +194,33 @@ export class ContainerURL extends StorageURL {
     });
   }
 
+  public createAppendBlobURL(blobName: string): AppendBlobURL {
+    return new AppendBlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );
+  }
+
+  public createBlobURL(blobName: string): BlobURL {
+    return new BlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );
+  }
+
+  public createBlockBlobURL(blobName: string): BlockBlobURL {
+    return new BlockBlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );
+  }
+
+  public createPageBlobURL(blobName: string): PageBlobURL {
+    return new PageBlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );
+  }
   /**
    * Returns all user-defined metadata and system properties for the specified
    * container. The data returned does not include the container's list of blobs.

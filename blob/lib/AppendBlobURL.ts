@@ -3,7 +3,7 @@ import { HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { BlobURL } from "./BlobURL";
-import { ContainerURL } from "./ContainerURL";
+import { Credential } from "./credentials/Credential";
 import { AppendBlob } from "./generated/lib/operations";
 import {
   IAppendBlobAccessConditions,
@@ -11,8 +11,9 @@ import {
   IMetadata
 } from "./models";
 import { Pipeline } from "./Pipeline";
+import { INewPipelineOptions, StorageURL } from "./StorageURL";
 import { URLConstants } from "./utils/constants";
-import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { setURLParameter } from "./utils/utils.common";
 
 export interface IAppendBlobCreateOptions {
   accessConditions?: IBlobAccessConditions;
@@ -34,37 +35,6 @@ export interface IAppendBlobAppendBlockOptions {
  * @extends {StorageURL}
  */
 export class AppendBlobURL extends BlobURL {
-  /**
-   * Creates a AppendBlobURL object from ContainerURL instance.
-   *
-   * @static
-   * @param {ContainerURL} containerURL A ContainerURL object
-   * @param {string} blobName An append blob name
-   * @returns {AppendBlobURL}
-   * @memberof AppendBlobURL
-   */
-  public static fromContainerURL(
-    containerURL: ContainerURL,
-    blobName: string
-  ): AppendBlobURL {
-    return new AppendBlobURL(
-      appendToURLPath(containerURL.url, encodeURIComponent(blobName)),
-      containerURL.pipeline
-    );
-  }
-
-  /**
-   * Creates a AppendBlobURL object from BlobURL instance.
-   *
-   * @static
-   * @param {BlobURL} blobURL
-   * @returns {AppendBlobURL}
-   * @memberof AppendBlobURL
-   */
-  public static fromBlobURL(blobURL: BlobURL): AppendBlobURL {
-    return new AppendBlobURL(blobURL.url, blobURL.pipeline);
-  }
-
   /**
    * appendBlobsContext provided by protocol layer.
    *
@@ -88,12 +58,17 @@ export class AppendBlobURL extends BlobURL {
    *                     Encoded URL string will NOT be escaped twice, only special characters in URL path will be escaped.
    *                     However, if a blob name includes ? or %, blob name must be encoded in the URL.
    *                     Such as a blob named "my?blob%", the URL should be "https://myaccount.blob.core.windows.net/mycontainer/my%3Fblob%25".
-   * @param {Pipeline} pipeline Call StorageURL.newPipeline() to create a default
+   * @param {Credential | Pipeline} credentialOrPipeline Call StorageURL.newPipeline() to create a default
    *                            pipeline, or provide a customized pipeline.
    * @memberof AppendBlobURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, credentialOrPipeline: Credential | Pipeline, pipelineOptions?: INewPipelineOptions) {
+    if (credentialOrPipeline instanceof Credential) {
+      const pipeline = StorageURL.newPipeline(credentialOrPipeline, pipelineOptions);
+      super(url, pipeline);
+    } else {
+      super(url, credentialOrPipeline);
+    }
     this.appendBlobContext = new AppendBlob(this.storageClientContext);
   }
 

@@ -1,19 +1,16 @@
 import * as assert from "assert";
 
 import { Aborter } from "../lib/Aborter";
-import { BlobURL } from "../lib/BlobURL";
-import { BlockBlobURL } from "../lib/BlockBlobURL";
-import { ContainerURL } from "../lib/ContainerURL";
 import { getBSU, getUniqueName, sleep } from "./utils";
 
 describe("ContainerURL", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
   });
 
@@ -52,8 +49,7 @@ describe("ContainerURL", () => {
   });
 
   it("create with all parameters configured", async () => {
-    const cURL = ContainerURL.fromServiceURL(
-      serviceURL,
+    const cURL = serviceURL.createContainerURL(
       getUniqueName(containerName)
     );
     const metadata = { key: "value" };
@@ -165,13 +161,11 @@ describe("ContainerURL", () => {
   it("listBlobFlatSegment with default parameters", async () => {
     const blobURLs = [];
     for (let i = 0; i < 3; i++) {
-      const blobURL = BlobURL.fromContainerURL(
-        containerURL,
+      const blockBlobURL = containerURL.createBlockBlobURL(
         getUniqueName(`blockblob/${i}`)
       );
-      const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
       await blockBlobURL.upload(Aborter.none, "", 0);
-      blobURLs.push(blobURL);
+      blobURLs.push(blockBlobURL);
     }
 
     const result = await containerURL.listBlobFlatSegment(Aborter.none);
@@ -194,15 +188,13 @@ describe("ContainerURL", () => {
       keyb: "c"
     };
     for (let i = 0; i < 2; i++) {
-      const blobURL = BlobURL.fromContainerURL(
-        containerURL,
+      const blockBlobURL = containerURL.createBlockBlobURL(
         getUniqueName(`${prefix}/${i}`)
       );
-      const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
       await blockBlobURL.upload(Aborter.none, "", 0, {
         metadata
       });
-      blobURLs.push(blobURL);
+      blobURLs.push(blockBlobURL);
     }
 
     const result = await containerURL.listBlobFlatSegment(
@@ -256,13 +248,11 @@ describe("ContainerURL", () => {
   it("listBlobHierarchySegment with default parameters", async () => {
     const blobURLs = [];
     for (let i = 0; i < 3; i++) {
-      const blobURL = BlobURL.fromContainerURL(
-        containerURL,
+      const blockBlobURL = containerURL.createBlockBlobURL(
         getUniqueName(`blockblob${i}/${i}`)
       );
-      const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
       await blockBlobURL.upload(Aborter.none, "", 0);
-      blobURLs.push(blobURL);
+      blobURLs.push(blockBlobURL);
     }
 
     const delimiter = "/";
@@ -298,15 +288,13 @@ describe("ContainerURL", () => {
     };
     const delimiter = "/";
     for (let i = 0; i < 2; i++) {
-      const blobURL = BlobURL.fromContainerURL(
-        containerURL,
+      const blockBlobURL = containerURL.createBlockBlobURL(
         getUniqueName(`${prefix}${i}${delimiter}${i}`)
       );
-      const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
       await blockBlobURL.upload(Aborter.none, "", 0, {
         metadata
       });
-      blobURLs.push(blobURL);
+      blobURLs.push(blockBlobURL);
     }
 
     const result = await containerURL.listBlobHierarchySegment(

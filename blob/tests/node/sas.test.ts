@@ -50,7 +50,7 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sasURL = `${serviceURL.url}?${sas}`;
     const serviceURLWithSAS = new ServiceURL(
       sasURL,
-      StorageURL.newPipeline(new AnonymousCredential())
+      new AnonymousCredential()
     );
 
     await serviceURLWithSAS.getAccountInfo(Aborter.none);
@@ -77,7 +77,7 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sasURL = `${serviceURL.url}?${sas}`;
     const serviceURLWithSAS = new ServiceURL(
       sasURL,
-      StorageURL.newPipeline(new AnonymousCredential())
+      new AnonymousCredential()
     );
 
     let error;
@@ -111,7 +111,7 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sasURL = `${serviceURL.url}?${sas}`;
     const serviceURLWithSAS = new ServiceURL(
       sasURL,
-      StorageURL.newPipeline(new AnonymousCredential())
+      new AnonymousCredential()
     );
 
     let error;
@@ -148,7 +148,7 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sasURL = `${serviceURL.url}?${sas}`;
     const serviceURLWithSAS = new ServiceURL(
       sasURL,
-      StorageURL.newPipeline(new AnonymousCredential())
+      new AnonymousCredential()
     );
 
     let error;
@@ -173,7 +173,7 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sharedKeyCredential = factories[factories.length - 1];
 
     const containerName = getUniqueName("container");
-    const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    const containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
 
     const containerSAS = generateBlobSASQueryParameters(
@@ -211,11 +211,11 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sharedKeyCredential = factories[factories.length - 1];
 
     const containerName = getUniqueName("container");
-    const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    const containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
 
     const blobName = getUniqueName("blob");
-    const blobURL = PageBlobURL.fromContainerURL(containerURL, blobName);
+    const blobURL = containerURL.createPageBlobURL(blobName);
     await blobURL.create(Aborter.none, 1024, {
       blobHTTPHeaders: {
         blobContentType: "content-type-original"
@@ -269,13 +269,13 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sharedKeyCredential = factories[factories.length - 1];
 
     const containerName = getUniqueName("container-with-dash");
-    const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    const containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
 
     const blobName = getUniqueName(
       "////Upper/blob/empty /another 汉字 ру́сский язы́к ру́сский язы́к عربي/عربى にっぽんご/にほんご . special ~!@#$%^&*()_+`1234567890-={}|[]\\:\";'<>?,/'"
     );
-    const blobURL = PageBlobURL.fromContainerURL(containerURL, blobName);
+    const blobURL = containerURL.createPageBlobURL(blobName);
     await blobURL.create(Aborter.none, 1024, {
       blobHTTPHeaders: {
         blobContentType: "content-type-original"
@@ -330,11 +330,11 @@ describe("Shared Access Signature (SAS) generation Node.js only", () => {
     const sharedKeyCredential = factories[factories.length - 1];
 
     const containerName = getUniqueName("container");
-    const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    const containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
 
     const blobName = getUniqueName("blob");
-    const blobURL = PageBlobURL.fromContainerURL(containerURL, blobName);
+    const blobURL = containerURL.createPageBlobURL(blobName);
     await blobURL.create(Aborter.none, 1024);
 
     const id = "unique-id";

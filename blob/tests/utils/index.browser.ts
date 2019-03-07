@@ -1,6 +1,5 @@
 import { AnonymousCredential } from "../../lib/credentials/AnonymousCredential";
 import { ServiceURL } from "../../lib/ServiceURL";
-import { StorageURL } from "../../lib/StorageURL";
 
 export * from "./testutils.common";
 
@@ -27,13 +26,9 @@ export function getGenericBSU(
   }
 
   const credential = new AnonymousCredential();
-  const pipeline = StorageURL.newPipeline(credential, {
-    // Enable telemetry option/retry option/custom logger/custom httpclient by passing them as arguments, e.g.,
-    // logger: new ConsoleHttpPipelineLogger(HttpPipelineLogLevel.INFO)
-  });
 
   const blobPrimaryURL = `https://${accountName}${accountNameSuffix}.blob.core.windows.net${accountSAS}`;
-  return new ServiceURL(blobPrimaryURL, pipeline);
+  return new ServiceURL(blobPrimaryURL, credential);
 }
 
 export function getBSU(): ServiceURL {

@@ -2,27 +2,22 @@ import * as assert from "assert";
 
 import { isNode } from "@azure/ms-rest-js";
 import { Aborter } from "../lib/Aborter";
-import { BlobURL } from "../lib/BlobURL";
-import { BlockBlobURL } from "../lib/BlockBlobURL";
-import { ContainerURL } from "../lib/ContainerURL";
 import { bodyToString, getBSU, getUniqueName, sleep } from "./utils";
 
 describe("BlobURL", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName: string = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+  let blockBlobURL = containerURL.createBlockBlobURL(blobName);
   const content = "Hello World";
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+    blockBlobURL = containerURL.createBlockBlobURL(blobName);
     await blockBlobURL.upload(Aborter.none, content, content.length);
   });
 
@@ -31,12 +26,12 @@ describe("BlobURL", () => {
   });
 
   it("download with with default parameters", async () => {
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await blockBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(await bodyToString(result, content.length), content);
   });
 
   it("download all parameters set", async () => {
-    const result = await blobURL.download(Aborter.none, 0, 1, {
+    const result = await blockBlobURL.download(Aborter.none, 0, 1, {
       rangeGetContentMD5: true
     });
     assert.deepStrictEqual(await bodyToString(result, 1), content[0]);
@@ -47,8 +42,8 @@ describe("BlobURL", () => {
       a: "a",
       b: "b"
     };
-    await blobURL.setMetadata(Aborter.none, metadata);
-    const result = await blobURL.getProperties(Aborter.none);
+    await blockBlobURL.setMetadata(Aborter.none, metadata);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.deepStrictEqual(result.metadata, metadata);
   });
 
@@ -57,18 +52,18 @@ describe("BlobURL", () => {
       a: "a",
       b: "b"
     };
-    await blobURL.setMetadata(Aborter.none, metadata);
-    const result = await blobURL.getProperties(Aborter.none);
+    await blockBlobURL.setMetadata(Aborter.none, metadata);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.deepStrictEqual(result.metadata, metadata);
 
-    await blobURL.setMetadata(Aborter.none);
-    const result2 = await blobURL.getProperties(Aborter.none);
+    await blockBlobURL.setMetadata(Aborter.none);
+    const result2 = await blockBlobURL.getProperties(Aborter.none);
     assert.deepStrictEqual(result2.metadata, {});
   });
 
   it("setHTTPHeaders with default parameters", async () => {
-    await blobURL.setHTTPHeaders(Aborter.none, {});
-    const result = await blobURL.getProperties(Aborter.none);
+    await blockBlobURL.setHTTPHeaders(Aborter.none, {});
+    const result = await blockBlobURL.getProperties(Aborter.none);
 
     assert.deepStrictEqual(result.blobType, "BlockBlob");
     assert.ok(result.lastModified);
@@ -92,8 +87,8 @@ describe("BlobURL", () => {
         : new Uint8Array([1, 2, 3, 4]),
       blobContentType: "blobContentType"
     };
-    await blobURL.setHTTPHeaders(Aborter.none, headers);
-    const result = await blobURL.getProperties(Aborter.none);
+    await blockBlobURL.setHTTPHeaders(Aborter.none, headers);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.ok(result.date);
     assert.deepStrictEqual(result.blobType, "BlockBlob");
     assert.ok(result.lastModified);
@@ -112,110 +107,110 @@ describe("BlobURL", () => {
   it("acquireLease", async () => {
     const guid = "ca761232ed4211cebacd00aa0057b223";
     const duration = 30;
-    await blobURL.acquireLease(Aborter.none, guid, duration);
+    await blockBlobURL.acquireLease(Aborter.none, guid, duration);
 
-    const result = await blobURL.getProperties(Aborter.none);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.equal(result.leaseDuration, "fixed");
     assert.equal(result.leaseState, "leased");
     assert.equal(result.leaseStatus, "locked");
 
-    await blobURL.releaseLease(Aborter.none, guid);
+    await blockBlobURL.releaseLease(Aborter.none, guid);
   });
 
   it("releaseLease", async () => {
     const guid = "ca761232ed4211cebacd00aa0057b223";
     const duration = -1;
-    await blobURL.acquireLease(Aborter.none, guid, duration);
+    await blockBlobURL.acquireLease(Aborter.none, guid, duration);
 
-    const result = await blobURL.getProperties(Aborter.none);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.equal(result.leaseDuration, "infinite");
     assert.equal(result.leaseState, "leased");
     assert.equal(result.leaseStatus, "locked");
 
-    await blobURL.releaseLease(Aborter.none, guid);
+    await blockBlobURL.releaseLease(Aborter.none, guid);
   });
 
   it("renewLease", async () => {
     const guid = "ca761232ed4211cebacd00aa0057b223";
     const duration = 15;
-    await blobURL.acquireLease(Aborter.none, guid, duration);
+    await blockBlobURL.acquireLease(Aborter.none, guid, duration);
 
-    const result = await blobURL.getProperties(Aborter.none);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.equal(result.leaseDuration, "fixed");
     assert.equal(result.leaseState, "leased");
     assert.equal(result.leaseStatus, "locked");
 
     await sleep(16 * 1000);
-    const result2 = await blobURL.getProperties(Aborter.none);
+    const result2 = await blockBlobURL.getProperties(Aborter.none);
     assert.ok(!result2.leaseDuration);
     assert.equal(result2.leaseState, "expired");
     assert.equal(result2.leaseStatus, "unlocked");
 
-    await blobURL.renewLease(Aborter.none, guid);
-    const result3 = await blobURL.getProperties(Aborter.none);
+    await blockBlobURL.renewLease(Aborter.none, guid);
+    const result3 = await blockBlobURL.getProperties(Aborter.none);
     assert.equal(result3.leaseDuration, "fixed");
     assert.equal(result3.leaseState, "leased");
     assert.equal(result3.leaseStatus, "locked");
 
-    await blobURL.releaseLease(Aborter.none, guid);
+    await blockBlobURL.releaseLease(Aborter.none, guid);
   });
 
   it("changeLease", async () => {
     const guid = "ca761232ed4211cebacd00aa0057b223";
     const duration = 15;
-    await blobURL.acquireLease(Aborter.none, guid, duration);
+    await blockBlobURL.acquireLease(Aborter.none, guid, duration);
 
-    const result = await blobURL.getProperties(Aborter.none);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.equal(result.leaseDuration, "fixed");
     assert.equal(result.leaseState, "leased");
     assert.equal(result.leaseStatus, "locked");
 
     const newGuid = "3c7e72ebb4304526bc53d8ecef03798f";
-    await blobURL.changeLease(Aborter.none, guid, newGuid);
+    await blockBlobURL.changeLease(Aborter.none, guid, newGuid);
 
-    await blobURL.getProperties(Aborter.none);
-    await blobURL.releaseLease(Aborter.none, newGuid);
+    await blockBlobURL.getProperties(Aborter.none);
+    await blockBlobURL.releaseLease(Aborter.none, newGuid);
   });
 
   it("breakLease", async () => {
     const guid = "ca761232ed4211cebacd00aa0057b223";
     const duration = 15;
-    await blobURL.acquireLease(Aborter.none, guid, duration);
+    await blockBlobURL.acquireLease(Aborter.none, guid, duration);
 
-    const result = await blobURL.getProperties(Aborter.none);
+    const result = await blockBlobURL.getProperties(Aborter.none);
     assert.equal(result.leaseDuration, "fixed");
     assert.equal(result.leaseState, "leased");
     assert.equal(result.leaseStatus, "locked");
 
-    await blobURL.breakLease(Aborter.none, 3);
+    await blockBlobURL.breakLease(Aborter.none, 3);
 
-    const result2 = await blobURL.getProperties(Aborter.none);
+    const result2 = await blockBlobURL.getProperties(Aborter.none);
     assert.ok(!result2.leaseDuration);
     assert.equal(result2.leaseState, "breaking");
     assert.equal(result2.leaseStatus, "locked");
 
     await sleep(3 * 1000);
 
-    const result3 = await blobURL.getProperties(Aborter.none);
+    const result3 = await blockBlobURL.getProperties(Aborter.none);
     assert.ok(!result3.leaseDuration);
     assert.equal(result3.leaseState, "broken");
     assert.equal(result3.leaseStatus, "unlocked");
   });
 
   it("delete", async () => {
-    await blobURL.delete(Aborter.none);
+    await blockBlobURL.delete(Aborter.none);
   });
 
   // The following code illustrates deleting a snapshot after creating one
   it("delete snapshot", async () => {
-    const result = await blobURL.createSnapshot(Aborter.none);
+    const result = await blockBlobURL.createSnapshot(Aborter.none);
     assert.ok(result.snapshot);
 
-    const blobSnapshotURL = blobURL.withSnapshot(result.snapshot!);
+    const blobSnapshotURL = blockBlobURL.withSnapshot(result.snapshot!);
     await blobSnapshotURL.getProperties(Aborter.none);
 
     await blobSnapshotURL.delete(Aborter.none);
-    await blobURL.delete(Aborter.none);
+    await blockBlobURL.delete(Aborter.none);
 
     const result2 = await containerURL.listBlobFlatSegment(
       Aborter.none,
@@ -230,10 +225,10 @@ describe("BlobURL", () => {
   });
 
   it("createSnapshot", async () => {
-    const result = await blobURL.createSnapshot(Aborter.none);
+    const result = await blockBlobURL.createSnapshot(Aborter.none);
     assert.ok(result.snapshot);
 
-    const blobSnapshotURL = blobURL.withSnapshot(result.snapshot!);
+    const blobSnapshotURL = blockBlobURL.withSnapshot(result.snapshot!);
     await blobSnapshotURL.getProperties(Aborter.none);
 
     const result3 = await containerURL.listBlobFlatSegment(
@@ -277,7 +272,7 @@ describe("BlobURL", () => {
       await sleep(15 * 1000);
     }
 
-    await blobURL.delete(Aborter.none);
+    await blockBlobURL.delete(Aborter.none);
 
     const result = await containerURL.listBlobFlatSegment(
       Aborter.none,
@@ -288,7 +283,7 @@ describe("BlobURL", () => {
     );
     assert.ok(result.segment.blobItems![0].deleted);
 
-    await blobURL.undelete(Aborter.none);
+    await blockBlobURL.undelete(Aborter.none);
     const result2 = await containerURL.listBlobFlatSegment(
       Aborter.none,
       undefined,
@@ -300,26 +295,24 @@ describe("BlobURL", () => {
   });
 
   it("startCopyFromURL", async () => {
-    const newBlobURL = BlobURL.fromContainerURL(
-      containerURL,
+    const newBlobURL = containerURL.createBlobURL(
       getUniqueName("copiedblob")
     );
-    const result = await newBlobURL.startCopyFromURL(Aborter.none, blobURL.url);
+    const result = await newBlobURL.startCopyFromURL(Aborter.none, blockBlobURL.url);
     assert.ok(result.copyId);
 
-    const properties1 = await blobURL.getProperties(Aborter.none);
+    const properties1 = await blockBlobURL.getProperties(Aborter.none);
     const properties2 = await newBlobURL.getProperties(Aborter.none);
     assert.deepStrictEqual(properties1.contentMD5, properties2.contentMD5);
     assert.deepStrictEqual(properties2.copyId, result.copyId);
-    assert.deepStrictEqual(properties2.copySource, blobURL.url);
+    assert.deepStrictEqual(properties2.copySource, blockBlobURL.url);
   });
 
   it("abortCopyFromURL should failed for a completed copy operation", async () => {
-    const newBlobURL = BlobURL.fromContainerURL(
-      containerURL,
+    const newBlobURL = containerURL.createBlobURL(
       getUniqueName("copiedblob")
     );
-    const result = await newBlobURL.startCopyFromURL(Aborter.none, blobURL.url);
+    const result = await newBlobURL.startCopyFromURL(Aborter.none, blockBlobURL.url);
     assert.ok(result.copyId);
     sleep(1 * 1000);
 

@@ -3,17 +3,17 @@ import { isNode, TransferProgressEvent } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { BlobDownloadResponse } from "./BlobDownloadResponse";
-import { ContainerURL } from "./ContainerURL";
+import { Credential } from "./credentials/Credential";
 import { Blob } from "./generated/lib/operations";
 import { rangeToString } from "./IRange";
 import { IBlobAccessConditions, IMetadata } from "./models";
 import { Pipeline } from "./Pipeline";
-import { StorageURL } from "./StorageURL";
+import { INewPipelineOptions, StorageURL } from "./StorageURL";
 import {
   DEFAULT_MAX_DOWNLOAD_RETRY_REQUESTS,
   URLConstants
 } from "./utils/constants";
-import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { setURLParameter } from "./utils/utils.common";
 
 export interface IBlobDownloadOptions {
   snapshot?: string;
@@ -105,22 +105,6 @@ export interface IBlobSetTierOptions {
  */
 export class BlobURL extends StorageURL {
   /**
-   * Creates a BlobURL object from an ContainerURL object.
-   *
-   * @static
-   * @param {ContainerURL} containerURL A ContainerURL object
-   * @param {string} blobName A blob name
-   * @returns
-   * @memberof BlobURL
-   */
-  public static fromContainerURL(containerURL: ContainerURL, blobName: string) {
-    return new BlobURL(
-      appendToURLPath(containerURL.url, encodeURIComponent(blobName)),
-      containerURL.pipeline
-    );
-  }
-
-  /**
    * blobContext provided by protocol layer.
    *
    * @private
@@ -147,8 +131,13 @@ export class BlobURL extends StorageURL {
    *                            pipeline, or provide a customized pipeline.
    * @memberof BlobURL
    */
-  constructor(url: string, pipeline: Pipeline) {
-    super(url, pipeline);
+  constructor(url: string, credentialOrPipeline: Credential | Pipeline, pipelineOptions?: INewPipelineOptions) {
+    if (credentialOrPipeline instanceof Credential) {
+      const pipeline = StorageURL.newPipeline(credentialOrPipeline, pipelineOptions);
+      super(url, pipeline);
+    } else {
+      super(url, credentialOrPipeline);
+    }
     this.blobContext = new Blob(this.storageClientContext);
   }
 

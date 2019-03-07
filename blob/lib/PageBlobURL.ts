@@ -3,7 +3,6 @@ import { HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { BlobURL } from "./BlobURL";
-import { ContainerURL } from "./ContainerURL";
 import { PageBlob } from "./generated/lib/operations";
 import { rangeToString } from "./IRange";
 import {
@@ -13,7 +12,7 @@ import {
 } from "./models";
 import { Pipeline } from "./Pipeline";
 import { URLConstants } from "./utils/constants";
-import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { setURLParameter } from "./utils/utils.common";
 
 export interface IPageBlobCreateOptions {
   accessConditions?: IBlobAccessConditions;
@@ -61,37 +60,6 @@ export interface IPageBlobStartCopyIncrementalOptions {
  * @extends {StorageURL}
  */
 export class PageBlobURL extends BlobURL {
-  /**
-   * Creates a PageBlobURL object from ContainerURL instance.
-   *
-   * @static
-   * @param {ContainerURL} containerURL A ContainerURL object
-   * @param {string} blobName A page blob name
-   * @returns {PageBlobURL}
-   * @memberof PageBlobURL
-   */
-  public static fromContainerURL(
-    containerURL: ContainerURL,
-    blobName: string
-  ): PageBlobURL {
-    return new PageBlobURL(
-      appendToURLPath(containerURL.url, encodeURIComponent(blobName)),
-      containerURL.pipeline
-    );
-  }
-
-  /**
-   * Creates a PageBlobURL object from BlobURL instance.
-   *
-   * @static
-   * @param {BlobURL} blobURL
-   * @returns {PageBlobURL}
-   * @memberof PageBlobURL
-   */
-  public static fromBlobURL(blobURL: BlobURL): PageBlobURL {
-    return new PageBlobURL(blobURL.url, blobURL.pipeline);
-  }
-
   /**
    * pageBlobsContext provided by protocol layer.
    *

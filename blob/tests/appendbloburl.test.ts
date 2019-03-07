@@ -1,23 +1,21 @@
 import * as assert from "assert";
 
 import { Aborter } from "../lib/Aborter";
-import { AppendBlobURL } from "../lib/AppendBlobURL";
-import { ContainerURL } from "../lib/ContainerURL";
 import { bodyToString, getBSU, getUniqueName } from "./utils";
 
 describe("AppendBlobURL", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName: string = getUniqueName("blob");
-  let appendBlobURL = AppendBlobURL.fromContainerURL(containerURL, blobName);
+  let appendBlobURL = containerURL.createAppendBlobURL(blobName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    appendBlobURL = AppendBlobURL.fromContainerURL(containerURL, blobName);
+    appendBlobURL = containerURL.createAppendBlobURL(blobName);
   });
 
   afterEach(async () => {

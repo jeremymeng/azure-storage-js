@@ -3,13 +3,12 @@ import { HttpRequestBody, TransferProgressEvent } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { BlobURL } from "./BlobURL";
-import { ContainerURL } from "./ContainerURL";
 import { BlockBlob } from "./generated/lib/operations";
 import { IRange, rangeToString } from "./IRange";
 import { IBlobAccessConditions, IMetadata } from "./models";
 import { Pipeline } from "./Pipeline";
 import { URLConstants } from "./utils/constants";
-import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { setURLParameter } from "./utils/utils.common";
 
 export interface IBlockBlobUploadOptions {
   accessConditions?: IBlobAccessConditions;
@@ -48,37 +47,6 @@ export interface IBlockBlobGetBlockListOptions {
  * @extends {StorageURL}
  */
 export class BlockBlobURL extends BlobURL {
-  /**
-   * Creates a BlockBlobURL object from ContainerURL instance.
-   *
-   * @static
-   * @param {ContainerURL} containerURL A ContainerURL object
-   * @param {string} blobName A block blob name
-   * @returns {BlockBlobURL}
-   * @memberof BlockBlobURL
-   */
-  public static fromContainerURL(
-    containerURL: ContainerURL,
-    blobName: string
-  ): BlockBlobURL {
-    return new BlockBlobURL(
-      appendToURLPath(containerURL.url, encodeURIComponent(blobName)),
-      containerURL.pipeline
-    );
-  }
-
-  /**
-   * Creates a BlockBlobURL object from BlobURL instance.
-   *
-   * @static
-   * @param {BlobURL} blobURL
-   * @returns {BlockBlobURL}
-   * @memberof BlockBlobURL
-   */
-  public static fromBlobURL(blobURL: BlobURL): BlockBlobURL {
-    return new BlockBlobURL(blobURL.url, blobURL.pipeline);
-  }
-
   /**
    * blockBlobContext provided by protocol layer.
    *

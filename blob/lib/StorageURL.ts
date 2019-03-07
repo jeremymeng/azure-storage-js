@@ -100,7 +100,7 @@ export abstract class StorageURL {
    * @type {StorageClient}
    * @memberof StorageURL
    */
-  protected readonly storageClientContext: StorageClientContext;
+  protected storageClientContext!: StorageClientContext;
 
   /**
    * Creates an instance of StorageURL.
@@ -112,15 +112,11 @@ export abstract class StorageURL {
     // URL should be encoded and only once, protocol layer shouldn't encode URL again
     this.url = escapeURLPath(url);
     this.pipeline = pipeline;
-    this.storageClientContext = new StorageClientContext(
-      this.url,
-      {
-        httpClient: pipeline.httpClient,
-        httpPipelineLogger: pipeline.httpPipelineLogger,
-        requestPolicyFactories: pipeline.requestPolicyFactories
-      }
-    );
+    this.setClientContext(pipeline);
+  }
 
+  protected setClientContext(pipeline: Pipeline) {
+    this.storageClientContext = new StorageClientContext(this.url, pipeline);
     // Override protocol layer's default content-type
     const storageClientContext = this.storageClientContext as any;
     storageClientContext.requestContentType = undefined;

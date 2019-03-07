@@ -2,25 +2,20 @@ import * as assert from "assert";
 import { bodyToString, getBSU, getUniqueName } from "./utils";
 
 import { Aborter } from "../lib/Aborter";
-import { BlobURL } from "../lib/BlobURL";
-import { ContainerURL } from "../lib/ContainerURL";
-import { PageBlobURL } from "../lib/PageBlobURL";
 
 describe("PageBlobURL", () => {
   const serviceURL = getBSU();
   let containerName: string = getUniqueName("container");
-  let containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+  let containerURL = serviceURL.createContainerURL(containerName);
   let blobName: string = getUniqueName("blob");
-  let blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-  let pageBlobURL = PageBlobURL.fromBlobURL(blobURL);
+  let pageBlobURL = containerURL.createPageBlobURL(blobName);
 
   beforeEach(async () => {
     containerName = getUniqueName("container");
-    containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+    containerURL = serviceURL.createContainerURL(containerName);
     await containerURL.create(Aborter.none);
     blobName = getUniqueName("blob");
-    blobURL = BlobURL.fromContainerURL(containerURL, blobName);
-    pageBlobURL = PageBlobURL.fromBlobURL(blobURL);
+    pageBlobURL = pageBlobURL = containerURL.createPageBlobURL(blobName);
   });
 
   afterEach(async () => {
@@ -30,7 +25,7 @@ describe("PageBlobURL", () => {
   it("create with default parameters", async () => {
     await pageBlobURL.create(Aborter.none, 512);
 
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await pageBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, 512),
       "\u0000".repeat(512)
@@ -53,13 +48,13 @@ describe("PageBlobURL", () => {
     };
     await pageBlobURL.create(Aborter.none, 512, options);
 
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await pageBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, 512),
       "\u0000".repeat(512)
     );
 
-    const properties = await blobURL.getProperties(Aborter.none);
+    const properties = await pageBlobURL.getProperties(Aborter.none);
     assert.equal(
       properties.cacheControl,
       options.blobHTTPHeaders.blobCacheControl
@@ -87,7 +82,7 @@ describe("PageBlobURL", () => {
   it("uploadPages", async () => {
     await pageBlobURL.create(Aborter.none, 1024);
 
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await pageBlobURL.download(Aborter.none, 0);
     assert.equal(await bodyToString(result, 1024), "\u0000".repeat(1024));
 
     await pageBlobURL.uploadPages(Aborter.none, "a".repeat(512), 0, 512);
@@ -102,7 +97,7 @@ describe("PageBlobURL", () => {
 
   it("clearPages", async () => {
     await pageBlobURL.create(Aborter.none, 1024);
-    let result = await blobURL.download(Aborter.none, 0);
+    let result = await pageBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, 1024),
       "\u0000".repeat(1024)
@@ -123,7 +118,7 @@ describe("PageBlobURL", () => {
   it("getPageRanges", async () => {
     await pageBlobURL.create(Aborter.none, 1024);
 
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await pageBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, 1024),
       "\u0000".repeat(1024)
@@ -142,7 +137,7 @@ describe("PageBlobURL", () => {
   it("getPageRangesDiff", async () => {
     await pageBlobURL.create(Aborter.none, 1024);
 
-    const result = await blobURL.download(Aborter.none, 0);
+    const result = await pageBlobURL.download(Aborter.none, 0);
     assert.deepStrictEqual(
       await bodyToString(result, 1024),
       "\u0000".repeat(1024)
