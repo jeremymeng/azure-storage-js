@@ -176,10 +176,10 @@ describe("ContainerURL", () => {
 
     const result = await containerURL.listBlobFlatSegment(Aborter.none);
     assert.ok(result.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result.containerName));
+    assert.ok(containerURL.url.includes(result.containerName));
     assert.deepStrictEqual(result.nextMarker, "");
     assert.deepStrictEqual(result.segment.blobItems!.length, blobURLs.length);
-    assert.ok(blobURLs[0].url.indexOf(result.segment.blobItems![0].name));
+    assert.ok(blobURLs[0].url.includes(result.segment.blobItems![0].name));
 
     for (const blob of blobURLs) {
       await blob.delete(Aborter.none);
@@ -221,9 +221,9 @@ describe("ContainerURL", () => {
       }
     );
     assert.ok(result.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result.containerName));
+    assert.ok(containerURL.url.includes(result.containerName));
     assert.deepStrictEqual(result.segment.blobItems!.length, 1);
-    assert.ok(blobURLs[0].url.indexOf(result.segment.blobItems![0].name));
+    assert.ok(blobURLs[0].url.includes(result.segment.blobItems![0].name));
     assert.deepStrictEqual(result.segment.blobItems![0].metadata, metadata);
 
     const result2 = await containerURL.listBlobFlatSegment(
@@ -243,9 +243,9 @@ describe("ContainerURL", () => {
     );
 
     assert.ok(result2.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result2.containerName));
+    assert.ok(containerURL.url.includes(result2.containerName));
     assert.deepStrictEqual(result2.segment.blobItems!.length, 1);
-    assert.ok(blobURLs[0].url.indexOf(result2.segment.blobItems![0].name));
+    assert.ok(blobURLs[0].url.includes(result2.segment.blobItems![0].name));
     assert.deepStrictEqual(result2.segment.blobItems![0].metadata, metadata);
 
     for (const blob of blobURLs) {
@@ -271,7 +271,7 @@ describe("ContainerURL", () => {
       delimiter
     );
     assert.ok(result.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result.containerName));
+    assert.ok(containerURL.url.includes(result.containerName));
     assert.deepStrictEqual(result.nextMarker, "");
     assert.deepStrictEqual(result.delimiter, delimiter);
     assert.deepStrictEqual(
@@ -281,7 +281,7 @@ describe("ContainerURL", () => {
 
     for (const blob of blobURLs) {
       let i = 0;
-      assert.ok(blob.url.indexOf(result.segment.blobPrefixes![i++].name));
+      assert.ok(blob.url.includes(result.segment.blobPrefixes![i++].name));
     }
 
     for (const blob of blobURLs) {
@@ -320,10 +320,10 @@ describe("ContainerURL", () => {
       }
     );
     assert.ok(result.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result.containerName));
+    assert.ok(containerURL.url.includes(result.containerName));
     assert.deepStrictEqual(result.segment.blobPrefixes!.length, 1);
     assert.deepStrictEqual(result.segment.blobItems!.length, 0);
-    assert.ok(blobURLs[0].url.indexOf(result.segment.blobPrefixes![0].name));
+    assert.ok(blobURLs[0].url.includes(result.segment.blobPrefixes![0].name));
 
     const result2 = await containerURL.listBlobHierarchySegment(
       Aborter.none,
@@ -336,10 +336,10 @@ describe("ContainerURL", () => {
       }
     );
     assert.ok(result2.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result2.containerName));
+    assert.ok(containerURL.url.includes(result2.containerName));
     assert.deepStrictEqual(result2.segment.blobPrefixes!.length, 1);
     assert.deepStrictEqual(result2.segment.blobItems!.length, 0);
-    assert.ok(blobURLs[0].url.indexOf(result2.segment.blobPrefixes![0].name));
+    assert.ok(blobURLs[0].url.includes(result2.segment.blobPrefixes![0].name));
 
     const result3 = await containerURL.listBlobHierarchySegment(
       Aborter.none,
@@ -352,12 +352,12 @@ describe("ContainerURL", () => {
       }
     );
     assert.ok(result3.serviceEndpoint.length > 0);
-    assert.ok(containerURL.url.indexOf(result3.containerName));
+    assert.ok(containerURL.url.includes(result3.containerName));
     assert.deepStrictEqual(result3.nextMarker, "");
     assert.deepStrictEqual(result3.delimiter, delimiter);
     assert.deepStrictEqual(result3.segment.blobItems!.length, 1);
     assert.deepStrictEqual(result3.segment.blobItems![0].metadata, metadata);
-    assert.ok(blobURLs[0].url.indexOf(result3.segment.blobItems![0].name));
+    assert.ok(blobURLs[0].url.includes(result3.segment.blobItems![0].name));
 
     for (const blob of blobURLs) {
       await blob.delete(Aborter.none);

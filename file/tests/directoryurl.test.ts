@@ -101,7 +101,7 @@ describe("DirectoryURL", () => {
       { prefix }
     );
     assert.ok(result.serviceEndpoint.length > 0);
-    assert.ok(shareURL.url.indexOf(result.shareName));
+    assert.ok(shareURL.url.includes(result.shareName));
     assert.deepStrictEqual(result.nextMarker, "");
     assert.deepStrictEqual(
       result.segment.directoryItems.length,
