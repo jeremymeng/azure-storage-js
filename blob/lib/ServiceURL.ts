@@ -179,4 +179,51 @@ export class ServiceURL extends StorageURL {
       ...options
     });
   }
+
+  public async *listSegments(
+    aborter: Aborter,
+    options: IServiceListContainersSegmentOptions = {}
+  ): AsyncIterableIterator<Models.ServiceListContainersSegmentResponse> {
+    let marker: string | undefined;
+    do {
+      yield await this.listContainersSegment(aborter, marker, options);
+    } while (marker)
+  }
+
+  public async *listItems(
+    aborter: Aborter,
+    options: IServiceListContainersSegmentOptions = {}
+  ): AsyncIterableIterator<Models.ContainerItem> {
+    for await (const segment of this.listSegments(aborter, options)) {
+      yield* segment.containerItems;
+    }
+  }
+
+  public listAll(
+    aborter: Aborter,
+    options: IServiceListContainersSegmentOptions = {}
+  ) {
+    return {
+      [Symbol.asyncIterator]: () => this.listItems(aborter, options),
+      Segments: () => this.listSegments(aborter, options),
+      then(res, rej) {
+        let all: Models.ContainerItem[] = [];
+        return new Promise(async (resolve) => {
+          for await (const segment of this.Segments()) {
+            all = all.concat(segment.containerItems);
+          }
+          resolve(all);
+        }).then(res, rej)
+      },
+      itemsFunc: (segment: Models.ServiceListContainersSegmentResponse) => segment.containerItems
+    };
+  }
+
+  async test() {
+    for await (const item of this.listAll(Aborter.none)) {
+    }
+
+    for await (const item2 of this.listAll(Aborter.none).Segments()) {      
+    }
+  }
 }
