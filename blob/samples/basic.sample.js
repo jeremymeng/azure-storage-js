@@ -39,18 +39,9 @@ async function main() {
     pipeline
   );
 
-  let marker;
-  do {
-    const listContainersResponse = await serviceURL.listContainersSegment(
-      Aborter.none,
-      marker
-    );
-
-    marker = listContainersResponse.nextMarker;
-    for (const container of listContainersResponse.containerItems) {
-      console.log(`Container: ${container.name}`);
-    }
-  } while (marker);
+  for await (const container of serviceURL.listAll(Aborter.none)) {
+    console.log(`Container: ${container.name}`);
+  }
 
   // Create a container
   const containerName = `newcontainer${new Date().getTime()}`;
@@ -78,18 +69,9 @@ async function main() {
   );
 
   // List blobs
-  marker = undefined;
-  do {
-    const listBlobsResponse = await containerURL.listBlobFlatSegment(
-      Aborter.none,
-      marker
-    );
-
-    marker = listBlobsResponse.nextMarker;
-    for (const blob of listBlobsResponse.segment.blobItems) {
-      console.log(`Blob: ${blob.name}`);
-    }
-  } while (marker);
+  for await (const blob of containerURL.listAllBlobs(Aborter.none)) {
+    console.log(`Blob: ${blob.name}`);
+  }
 
   // Get blob content from position 0 to the end
   // In Node.js, get downloaded data by accessing downloadBlockBlobResponse.readableStreamBody

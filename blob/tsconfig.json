@@ -6,6 +6,7 @@
     "sourceMap": true,
     "newLine": "LF",
     "target": "es5",
+    "downlevelIteration": true,
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,

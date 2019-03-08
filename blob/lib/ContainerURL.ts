@@ -5,6 +5,7 @@ import { Container } from "./generated/lib/operations";
 import { IContainerAccessConditions, IMetadata } from "./models";
 import { Pipeline } from "./Pipeline";
 import { ServiceURL } from "./ServiceURL";
+import { ItemLists } from "./ItemLists";
 import { StorageURL } from "./StorageURL";
 import { ETagNone } from "./utils/constants";
 import { appendToURLPath, truncatedISO8061Date } from "./utils/utils.common";
@@ -614,4 +615,35 @@ export class ContainerURL extends StorageURL {
       ...options
     });
   }
+
+  private static readonly flatListing = new ItemLists<
+    ContainerURL,
+    Models.ContainerListBlobFlatSegmentResponse,
+    IContainerListBlobsSegmentOptions,
+    Models.BlobItem>(
+    (container, aborter, marker, options) => container.listBlobFlatSegment(aborter, marker, options),
+    (segment) => segment.segment.blobItems
+  );
+
+  public listAllBlobs(
+    aborter: Aborter,
+    options: IContainerListBlobsSegmentOptions = {}
+  ) {
+    return ContainerURL.flatListing.listAll(this, aborter, options);
+  }
+
+  // private static readonly hierarchyListing = new ItemLists<
+  //   ContainerURL,
+  //   Models.ContainerListBlobHierarchySegmentResponse,
+  //   IContainerListBlobsSegmentOptions,
+  //   Models.BlobItem>(
+  //   (container, aborter, delimiter, marker, options) => container.listBlobHierarchySegment(aborter, delimiter, marker, options); // TODO: extra `delimiter` parameter!!
+  //   (segment) => segment.segment.blobItems // TODO: the result has two arrays.  How do we deal with such a case?
+  // );
+  // public listAllBlobsWithHierarchy(
+  //   aborter: Aborter,
+  //   options: IContainerListBlobsSegmentOptions = {}
+  // ) {
+  //   return hierarchyListing.listAll(aborter, options);
+  // }
 }

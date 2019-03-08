@@ -4,6 +4,7 @@ import { ListContainersIncludeType } from "./generated/lib/models/index";
 import { Service } from "./generated/lib/operations";
 import { Pipeline } from "./Pipeline";
 import { StorageURL } from "./StorageURL";
+import { ItemLists } from './ItemLists';
 
 export interface IServiceListContainersSegmentOptions {
   /**
@@ -186,6 +187,7 @@ export class ServiceURL extends StorageURL {
   ): AsyncIterableIterator<Models.ServiceListContainersSegmentResponse> {
     let marker: string | undefined;
     do {
+      // TODO: do we need to handle abort signal?
       yield await this.listContainersSegment(aborter, marker, options);
     } while (marker)
   }
@@ -195,6 +197,7 @@ export class ServiceURL extends StorageURL {
     options: IServiceListContainersSegmentOptions = {}
   ): AsyncIterableIterator<Models.ContainerItem> {
     for await (const segment of this.listSegments(aborter, options)) {
+      // TODO: do we need to handle abort signal?
       yield* segment.containerItems;
     }
   }
@@ -206,24 +209,28 @@ export class ServiceURL extends StorageURL {
     return {
       [Symbol.asyncIterator]: () => this.listItems(aborter, options),
       Segments: () => this.listSegments(aborter, options),
-      then(res, rej) {
+      then(
+        onfulfiled?: ((value: Models.ContainerItem[]) => Models.ContainerItem[] | PromiseLike<Models.ContainerItem[]>) | undefined | null,
+        onrejected?: ((reason: any) => never | PromiseLike<never>) | undefined | null) {
         let all: Models.ContainerItem[] = [];
-        return new Promise(async (resolve) => {
+        return new Promise<Models.ContainerItem[]>(async (resolve) => {
           for await (const segment of this.Segments()) {
             all = all.concat(segment.containerItems);
           }
           resolve(all);
-        }).then(res, rej)
-      },
-      itemsFunc: (segment: Models.ServiceListContainersSegmentResponse) => segment.containerItems
+        }).then(onfulfiled, onrejected)
+      }
     };
   }
 
-  async test() {
-    for await (const item of this.listAll(Aborter.none)) {
-    }
+  async *test() {
+    const listing = new ItemLists<ServiceURL, Models.ListContainersSegmentResponse, IServiceListContainersSegmentOptions, Models.ContainerItem>(
+      (container, aborter, marker, options) => container.listContainersSegment(aborter, marker, options),
+      (segment: Models.ListContainersSegmentResponse) => segment.containerItems
+    );
 
-    for await (const item2 of this.listAll(Aborter.none).Segments()) {      
+    for await (const c of listing.listAll(this, Aborter.none)) {
+      yield c;
     }
   }
 }
