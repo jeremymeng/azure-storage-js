@@ -41,14 +41,13 @@ import { streamToBuffer } from "./utils/utils.node";
  * @returns {(Promise<BlobUploadCommonResponse>)} ICommonResponse
  */
 export async function uploadFileToBlockBlob(
-  aborter: Aborter,
   filePath: string,
   blockBlobURL: BlockBlobURL,
-  options?: IUploadToBlockBlobOptions
+  options?: IUploadToBlockBlobOptions,
+  aborter: Aborter = Aborter.none
 ): Promise<BlobUploadCommonResponse> {
   const size = fs.statSync(filePath).size;
   return uploadResetableStreamToBlockBlob(
-    aborter,
     (offset, count) =>
       fs.createReadStream(filePath, {
         autoClose: true,
@@ -57,7 +56,8 @@ export async function uploadFileToBlockBlob(
       }),
     size,
     blockBlobURL,
-    options
+    options,
+    aborter
   );
 }
 
@@ -83,11 +83,11 @@ export async function uploadFileToBlockBlob(
  * @returns {(Promise<BlobUploadCommonResponse>)} ICommonResponse
  */
 async function uploadResetableStreamToBlockBlob(
-  aborter: Aborter,
   streamFactory: (offset: number, count?: number) => NodeJS.ReadableStream,
   size: number,
   blockBlobURL: BlockBlobURL,
-  options: IUploadToBlockBlobOptions = {}
+  options: IUploadToBlockBlobOptions = {},
+  aborter: Aborter = Aborter.none
 ): Promise<BlobUploadCommonResponse> {
   if (!options.blockSize) {
     options.blockSize = 0;
@@ -132,7 +132,7 @@ async function uploadResetableStreamToBlockBlob(
   }
 
   if (size <= options.maxSingleShotSize) {
-    return blockBlobURL.upload(aborter, () => streamFactory(0), size, options);
+    return blockBlobURL.upload(() => streamFactory(0), size, options, aborter);
   }
 
   const numBlocks: number = Math.floor((size - 1) / options.blockSize) + 1;
@@ -157,14 +157,14 @@ async function uploadResetableStreamToBlockBlob(
         const contentLength = end - start;
         blockList.push(blockID);
         await blockBlobURL.stageBlock(
-          aborter,
           blockID,
           () => streamFactory(start, contentLength),
           contentLength,
           {
             leaseAccessConditions: options.blobAccessConditions!
               .leaseAccessConditions
-          }
+          },
+          aborter
         );
         // Update progress after block is successfully uploaded to server, in case of block trying
         transferProgress += contentLength;
@@ -176,7 +176,7 @@ async function uploadResetableStreamToBlockBlob(
   }
   await batch.do();
 
-  return blockBlobURL.commitBlockList(aborter, blockList, options);
+  return blockBlobURL.commitBlockList(blockList, options, aborter);
 }
 
 /**
@@ -196,12 +196,12 @@ async function uploadResetableStreamToBlockBlob(
  * @returns {Promise<void>}
  */
 export async function downloadBlobToBuffer(
-  aborter: Aborter,
   buffer: Buffer,
   blobURL: BlobURL,
   offset: number,
   count?: number,
-  options: IDownloadFromBlobOptions = {}
+  options: IDownloadFromBlobOptions = {},
+  aborter: Aborter = Aborter.none
 ): Promise<void> {
   if (!options.blockSize) {
     options.blockSize = 0;
@@ -227,7 +227,7 @@ export async function downloadBlobToBuffer(
 
   // Customer doesn't specify length, get it
   if (!count) {
-    const response = await blobURL.getProperties(aborter, options);
+    const response = await blobURL.getProperties(options, aborter);
     count = response.contentLength! - offset;
     if (count < 0) {
       throw new RangeError(
@@ -249,13 +249,13 @@ export async function downloadBlobToBuffer(
       const chunkEnd =
         off + options.blockSize! < count! ? off + options.blockSize! : count!;
       const response = await blobURL.download(
-        aborter,
         off,
         chunkEnd - off + 1,
         {
           blobAccessConditions: options.blobAccessConditions,
           maxRetryRequests: options.maxRetryRequestsPerBlock
-        }
+        },
+        aborter
       );
       const stream = response.readableStreamBody!;
       await streamToBuffer(stream, buffer, off - offset, chunkEnd - offset);
@@ -331,12 +331,12 @@ export interface IUploadStreamToBlockBlobOptions {
  * @returns {Promise<BlobUploadCommonResponse>}
  */
 export async function uploadStreamToBlockBlob(
-  aborter: Aborter,
   stream: Readable,
   blockBlobURL: BlockBlobURL,
   bufferSize: number,
   maxBuffers: number,
-  options: IUploadStreamToBlockBlobOptions = {}
+  options: IUploadStreamToBlockBlobOptions = {},
+  aborter: Aborter = Aborter.none
 ): Promise<BlobUploadCommonResponse> {
   if (!options.blobHTTPHeaders) {
     options.blobHTTPHeaders = {};
@@ -359,9 +359,9 @@ export async function uploadStreamToBlockBlob(
       blockList.push(blockID);
       blockNum++;
 
-      await blockBlobURL.stageBlock(aborter, blockID, buffer, buffer.length, {
+      await blockBlobURL.stageBlock(blockID, buffer, buffer.length, {
         leaseAccessConditions: options.accessConditions!.leaseAccessConditions
-      });
+      }, aborter);
 
       // Update progress after block is successfully uploaded to server, in case of block trying
       transferProgress += buffer.length;
@@ -377,5 +377,5 @@ export async function uploadStreamToBlockBlob(
   );
   await scheduler.do();
 
-  return blockBlobURL.commitBlockList(aborter, blockList, options);
+  return blockBlobURL.commitBlockList(blockList, options, aborter);
 }

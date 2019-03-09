@@ -4,6 +4,8 @@ import { ListContainersIncludeType } from "./generated/lib/models/index";
 import { Service } from "./generated/lib/operations";
 import { Pipeline } from "./Pipeline";
 import { StorageURL } from "./StorageURL";
+import { ContainerURL } from "./ContainerURL";
+import { appendToURLPath } from './utils/utils.common';
 
 export interface IServiceListContainersSegmentOptions {
   /**
@@ -85,7 +87,7 @@ export class ServiceURL extends StorageURL {
    * @memberof ServiceURL
    */
   public async getProperties(
-    aborter: Aborter
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ServiceGetPropertiesResponse> {
     return this.serviceContext.getProperties({
       abortSignal: aborter
@@ -104,8 +106,8 @@ export class ServiceURL extends StorageURL {
    * @memberof ServiceURL
    */
   public async setProperties(
-    aborter: Aborter,
-    properties: Models.StorageServiceProperties
+    properties: Models.StorageServiceProperties,
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ServiceSetPropertiesResponse> {
     return this.serviceContext.setProperties(properties, {
       abortSignal: aborter
@@ -124,7 +126,7 @@ export class ServiceURL extends StorageURL {
    * @memberof ServiceURL
    */
   public async getStatistics(
-    aborter: Aborter
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ServiceGetStatisticsResponse> {
     return this.serviceContext.getStatistics({
       abortSignal: aborter
@@ -144,11 +146,25 @@ export class ServiceURL extends StorageURL {
    * @memberof ServiceURL
    */
   public async getAccountInfo(
-    aborter: Aborter
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ServiceGetAccountInfoResponse> {
     return this.serviceContext.getAccountInfo({
       abortSignal: aborter
     });
+  }
+
+  /**
+   * Creates a ContainerURL object.
+   *
+   * @param {string} containerName A container name
+   * @returns {ContainerURL}
+   * @memberof ServiceURL
+   */
+  public createContainerURL(containerName: string): ContainerURL {
+    return new ContainerURL(
+      appendToURLPath(this.url, encodeURIComponent(containerName)),
+      this.pipeline
+    );
   }
 
   /**
@@ -169,9 +185,9 @@ export class ServiceURL extends StorageURL {
    * @memberof ServiceURL
    */
   public async listContainersSegment(
-    aborter: Aborter,
     marker?: string,
-    options: IServiceListContainersSegmentOptions = {}
+    options: IServiceListContainersSegmentOptions = {},
+    aborter: Aborter = Aborter.none,
   ): Promise<Models.ServiceListContainersSegmentResponse> {
     return this.serviceContext.listContainersSegment({
       abortSignal: aborter,

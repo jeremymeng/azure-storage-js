@@ -445,21 +445,21 @@ export class BlobDownloadResponse implements Models.BlobDownloadResponse {
    * @memberof BlobDownloadResponse
    */
   public constructor(
-    aborter: Aborter,
     originalResponse: Models.BlobDownloadResponse,
     getter: ReadableStreamGetter,
     offset: number,
     count: number,
-    options: IRetriableReadableStreamOptions = {}
+    options: IRetriableReadableStreamOptions = {},
+    aborter: Aborter = Aborter.none
   ) {
     this.originalResponse = originalResponse;
     this.blobDownloadStream = new RetriableReadableStream(
-      aborter,
       this.originalResponse.readableStreamBody!,
       getter,
       offset,
       count,
-      options
+      options,
+      aborter
     );
   }
 }

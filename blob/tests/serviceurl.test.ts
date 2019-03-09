@@ -8,7 +8,7 @@ import { getAlternateBSU, getBSU, getUniqueName, wait } from "./utils";
 describe("ServiceURL", () => {
   it("ListContainers with default parameters", async () => {
     const serviceURL = getBSU();
-    const result = await serviceURL.listContainersSegment(Aborter.none);
+    const result = await serviceURL.listContainersSegment();
     assert.ok(typeof result.requestId);
     assert.ok(result.requestId!.length > 0);
     assert.ok(typeof result.version);
@@ -39,11 +39,10 @@ describe("ServiceURL", () => {
       serviceURL,
       containerName2
     );
-    await containerURL1.create(Aborter.none, { metadata: { key: "val" } });
-    await containerURL2.create(Aborter.none, { metadata: { key: "val" } });
+    await containerURL1.create({ metadata: { key: "val" } });
+    await containerURL2.create({ metadata: { key: "val" } });
 
     const result1 = await serviceURL.listContainersSegment(
-      Aborter.none,
       undefined,
       {
         include: "metadata",
@@ -70,7 +69,6 @@ describe("ServiceURL", () => {
     assert.deepEqual(result1.containerItems![0].metadata!.key, "val");
 
     const result2 = await serviceURL.listContainersSegment(
-      Aborter.none,
       result1.nextMarker,
       {
         include: "metadata",
@@ -96,13 +94,13 @@ describe("ServiceURL", () => {
     );
     assert.deepEqual(result2.containerItems![0].metadata!.key, "val");
 
-    await containerURL1.delete(Aborter.none);
-    await containerURL2.delete(Aborter.none);
+    await containerURL1.delete();
+    await containerURL2.delete();
   });
 
   it("GetProperties", async () => {
     const serviceURL = getBSU();
-    const result = await serviceURL.getProperties(Aborter.none);
+    const result = await serviceURL.getProperties();
 
     assert.ok(typeof result.requestId);
     assert.ok(result.requestId!.length > 0);
@@ -121,7 +119,7 @@ describe("ServiceURL", () => {
   it("SetProperties", async () => {
     const serviceURL = getBSU();
 
-    const serviceProperties = await serviceURL.getProperties(Aborter.none);
+    const serviceProperties = await serviceURL.getProperties();
 
     serviceProperties.logging = {
       deleteProperty: true,
@@ -174,10 +172,10 @@ describe("ServiceURL", () => {
       };
     }
 
-    await serviceURL.setProperties(Aborter.none, serviceProperties);
+    await serviceURL.setProperties(serviceProperties);
     await wait(5 * 1000);
 
-    const result = await serviceURL.getProperties(Aborter.none);
+    const result = await serviceURL.getProperties();
     assert.ok(typeof result.requestId);
     assert.ok(result.requestId!.length > 0);
     assert.ok(typeof result.version);
@@ -195,7 +193,7 @@ describe("ServiceURL", () => {
     }
 
     serviceURL!
-      .getStatistics(Aborter.none)
+      .getStatistics()
       .then(result => {
         assert.ok(result.geoReplication!.lastSyncTime);
         done();
@@ -206,7 +204,7 @@ describe("ServiceURL", () => {
   it("getAccountInfo", async () => {
     const serviceURL = getBSU();
 
-    const accountInfo = await serviceURL.getAccountInfo(Aborter.none);
+    const accountInfo = await serviceURL.getAccountInfo();
     assert.ok(accountInfo.accountKind);
     assert.ok(accountInfo.skuName);
   });

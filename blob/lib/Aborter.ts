@@ -14,11 +14,11 @@ import { AbortSignalLike, isNode } from "@azure/ms-rest-js";
  *
  * @example
  * // Abort without timeout
- * await blockBlobURL.upload(Aborter.none, buf, buf.length);
+ * await blockBlobURL.upload(buf, buf.length, {}, Aborter.none);
  *
  * @example
  * // Abort container create in 1000ms
- * await blockBlobURL.upload(Aborter.timeout(1000), buf, buf.length);
+ * await blockBlobURL.upload(buf, buf.length, {}, Aborter.timeout(1000));
  *
  * @example
  * // Share aborter cross multiple operations in 30s
@@ -33,8 +33,8 @@ import { AbortSignalLike, isNode } from "@azure/ms-rest-js";
  * const aborter = Aborter.timeout(30 * 1000);
  *
  * // Following 2 operations can't take more than 25 seconds
- * await blockBlobURL.upload(aborter.withTimeout(25 * 1000), buf, buf.length);
- * await blockBlobURL.upload(aborter.withTimeout(25 * 1000), buf, buf.length);
+ * await blockBlobURL.upload(buf, buf.length, {}, aborter.withTimeout(25 * 1000));
+ * await blockBlobURL.upload(buf, buf.length, {}, aborter.withTimeout(25 * 1000));
  *
  * @export
  * @class Aborter

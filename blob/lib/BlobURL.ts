@@ -3,7 +3,6 @@ import { isNode, TransferProgressEvent } from "@azure/ms-rest-js";
 import * as Models from "../lib/generated/lib/models";
 import { Aborter } from "./Aborter";
 import { BlobDownloadResponse } from "./BlobDownloadResponse";
-import { ContainerURL } from "./ContainerURL";
 import { Blob } from "./generated/lib/operations";
 import { rangeToString } from "./IRange";
 import { IBlobAccessConditions, IMetadata } from "./models";
@@ -13,7 +12,7 @@ import {
   DEFAULT_MAX_DOWNLOAD_RETRY_REQUESTS,
   URLConstants
 } from "./utils/constants";
-import { appendToURLPath, setURLParameter } from "./utils/utils.common";
+import { setURLParameter } from "./utils/utils.common";
 
 export interface IBlobDownloadOptions {
   snapshot?: string;
@@ -105,22 +104,6 @@ export interface IBlobSetTierOptions {
  */
 export class BlobURL extends StorageURL {
   /**
-   * Creates a BlobURL object from an ContainerURL object.
-   *
-   * @static
-   * @param {ContainerURL} containerURL A ContainerURL object
-   * @param {string} blobName A blob name
-   * @returns
-   * @memberof BlobURL
-   */
-  public static fromContainerURL(containerURL: ContainerURL, blobName: string) {
-    return new BlobURL(
-      appendToURLPath(containerURL.url, encodeURIComponent(blobName)),
-      containerURL.pipeline
-    );
-  }
-
-  /**
    * blobContext provided by protocol layer.
    *
    * @private
@@ -201,10 +184,10 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async download(
-    aborter: Aborter,
-    offset: number,
+    offset: number = 0,
     count?: number,
-    options: IBlobDownloadOptions = {}
+    options: IBlobDownloadOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobDownloadResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     options.blobAccessConditions.modifiedAccessConditions =
@@ -253,7 +236,6 @@ export class BlobURL extends StorageURL {
     }
 
     return new BlobDownloadResponse(
-      aborter,
       res,
       async (start: number): Promise<NodeJS.ReadableStream> => {
         const updatedOptions: Models.BlobDownloadOptionalParams = {
@@ -294,7 +276,8 @@ export class BlobURL extends StorageURL {
       {
         maxRetryRequests: options.maxRetryRequests,
         progress: options.progress
-      }
+      },
+      aborter
     );
   }
 
@@ -310,8 +293,8 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async getProperties(
-    aborter: Aborter,
-    options: IBlobGetPropertiesOptions = {}
+    options: IBlobGetPropertiesOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobGetPropertiesResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     return this.blobContext.getProperties({
@@ -336,8 +319,8 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async delete(
-    aborter: Aborter,
-    options: IBlobDeleteOptions = {}
+    options: IBlobDeleteOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobDeleteResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     return this.blobContext.deleteMethod({
@@ -361,7 +344,7 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async undelete(
-    aborter: Aborter
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobUndeleteResponse> {
     return this.blobContext.undelete({
       abortSignal: aborter
@@ -385,9 +368,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async setHTTPHeaders(
-    aborter: Aborter,
     blobHTTPHeaders?: Models.BlobHTTPHeaders,
-    options: IBlobSetHTTPHeadersOptions = {}
+    options: IBlobSetHTTPHeadersOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobSetHTTPHeadersResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     return this.blobContext.setHTTPHeaders({
@@ -415,9 +398,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async setMetadata(
-    aborter: Aborter,
     metadata?: IMetadata,
-    options: IBlobSetMetadataOptions = {}
+    options: IBlobSetMetadataOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobSetMetadataResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     return this.blobContext.setMetadata({
@@ -444,10 +427,10 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async acquireLease(
-    aborter: Aborter,
     proposedLeaseId: string,
     duration: number,
-    options: IBlobAcquireLeaseOptions = {}
+    options: IBlobAcquireLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobAcquireLeaseResponse> {
     return this.blobContext.acquireLease({
       abortSignal: aborter,
@@ -470,9 +453,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async releaseLease(
-    aborter: Aborter,
     leaseId: string,
-    options: IBlobReleaseLeaseOptions = {}
+    options: IBlobReleaseLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobReleaseLeaseResponse> {
     return this.blobContext.releaseLease(leaseId, {
       abortSignal: aborter,
@@ -492,9 +475,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async renewLease(
-    aborter: Aborter,
     leaseId: string,
-    options: IBlobRenewLeaseOptions = {}
+    options: IBlobRenewLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobRenewLeaseResponse> {
     return this.blobContext.renewLease(leaseId, {
       abortSignal: aborter,
@@ -515,10 +498,10 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async changeLease(
-    aborter: Aborter,
     leaseId: string,
     proposedLeaseId: string,
-    options: IBlobChangeLeaseOptions = {}
+    options: IBlobChangeLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobChangeLeaseResponse> {
     return this.blobContext.changeLease(leaseId, proposedLeaseId, {
       abortSignal: aborter,
@@ -539,9 +522,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async breakLease(
-    aborter: Aborter,
     breakPeriod?: number,
-    options: IBlobBreakLeaseOptions = {}
+    options: IBlobBreakLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobBreakLeaseResponse> {
     return this.blobContext.breakLease({
       abortSignal: aborter,
@@ -561,8 +544,8 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async createSnapshot(
-    aborter: Aborter,
-    options: IBlobCreateSnapshotOptions = {}
+    options: IBlobCreateSnapshotOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobCreateSnapshotResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     return this.blobContext.createSnapshot({
@@ -592,9 +575,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async startCopyFromURL(
-    aborter: Aborter,
     copySource: string,
-    options: IBlobStartCopyFromURLOptions = {}
+    options: IBlobStartCopyFromURLOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobStartCopyFromURLResponse> {
     options.blobAccessConditions = options.blobAccessConditions || {};
     options.sourceModifiedAccessConditions =
@@ -630,9 +613,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async abortCopyFromURL(
-    aborter: Aborter,
     copyId: string,
-    options: IBlobAbortCopyFromURLOptions = {}
+    options: IBlobAbortCopyFromURLOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobAbortCopyFromURLResponse> {
     return this.blobContext.abortCopyFromURL(copyId, {
       abortSignal: aborter,
@@ -656,9 +639,9 @@ export class BlobURL extends StorageURL {
    * @memberof BlobURL
    */
   public async setTier(
-    aborter: Aborter,
     tier: Models.AccessTier,
-    options: IBlobSetTierOptions = {}
+    options: IBlobSetTierOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.BlobSetTierResponse> {
     return await this.blobContext.setTier(tier, {
       abortSignal: aborter,

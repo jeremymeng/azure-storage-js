@@ -72,12 +72,12 @@ export class RetriableReadableStream extends Readable {
    * @memberof RetriableReadableStream
    */
   public constructor(
-    aborter: Aborter,
     source: NodeJS.ReadableStream,
     getter: ReadableStreamGetter,
     offset: number,
     count: number,
-    options: IRetriableReadableStreamOptions = {}
+    options: IRetriableReadableStreamOptions = {},
+    aborter: Aborter = Aborter.none
   ) {
     super();
     this.aborter = aborter;

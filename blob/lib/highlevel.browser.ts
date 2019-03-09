@@ -33,20 +33,20 @@ import { generateBlockID } from "./utils/utils.common";
  * @returns {Promise<BlobUploadCommonResponse>}
  */
 export async function uploadBrowserDataToBlockBlob(
-  aborter: Aborter,
   browserData: Blob | ArrayBuffer | ArrayBufferView,
   blockBlobURL: BlockBlobURL,
-  options?: IUploadToBlockBlobOptions
+  options?: IUploadToBlockBlobOptions,
+  aborter: Aborter = Aborter.none
 ): Promise<BlobUploadCommonResponse> {
   const browserBlob = new Blob([browserData]);
   return UploadSeekableBlobToBlockBlob(
-    aborter,
     (offset: number, size: number): Blob => {
       return browserBlob.slice(offset, offset + size);
     },
     browserBlob.size,
     blockBlobURL,
-    options
+    options,
+    aborter
   );
 }
 
@@ -69,11 +69,11 @@ export async function uploadBrowserDataToBlockBlob(
  * @returns {Promise<BlobUploadCommonResponse>}
  */
 async function UploadSeekableBlobToBlockBlob(
-  aborter: Aborter,
   blobFactory: (offset: number, size: number) => Blob,
   size: number,
   blockBlobURL: BlockBlobURL,
-  options: IUploadToBlockBlobOptions = {}
+  options: IUploadToBlockBlobOptions = {},
+  aborter: Aborter = Aborter.none
 ): Promise<BlobUploadCommonResponse> {
   if (!options.blockSize) {
     options.blockSize = 0;
@@ -118,7 +118,7 @@ async function UploadSeekableBlobToBlockBlob(
   }
 
   if (size <= options.maxSingleShotSize) {
-    return blockBlobURL.upload(aborter, blobFactory(0, size), size, options);
+    return blockBlobURL.upload(blobFactory(0, size), size, options, aborter);
   }
 
   const numBlocks: number = Math.floor((size - 1) / options.blockSize) + 1;
@@ -143,14 +143,14 @@ async function UploadSeekableBlobToBlockBlob(
         const contentLength = end - start;
         blockList.push(blockID);
         await blockBlobURL.stageBlock(
-          aborter,
           blockID,
           blobFactory(start, contentLength),
           contentLength,
           {
             leaseAccessConditions: options.blobAccessConditions!
               .leaseAccessConditions
-          }
+          },
+          aborter
         );
         // Update progress after block is successfully uploaded to server, in case of block trying
         // TODO: Hook with convenience layer progress event in finer level
@@ -165,5 +165,5 @@ async function UploadSeekableBlobToBlockBlob(
   }
   await batch.do();
 
-  return blockBlobURL.commitBlockList(aborter, blockList, options);
+  return blockBlobURL.commitBlockList(blockList, options, aborter);
 }

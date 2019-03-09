@@ -4,10 +4,13 @@ import { Aborter } from "./Aborter";
 import { Container } from "./generated/lib/operations";
 import { IContainerAccessConditions, IMetadata } from "./models";
 import { Pipeline } from "./Pipeline";
-import { ServiceURL } from "./ServiceURL";
 import { StorageURL } from "./StorageURL";
 import { ETagNone } from "./utils/constants";
-import { appendToURLPath, truncatedISO8061Date } from "./utils/utils.common";
+import { truncatedISO8061Date, appendToURLPath } from "./utils/utils.common";
+import { BlockBlobURL } from './BlockBlobURL';
+import { BlobURL } from './BlobURL';
+import { PageBlobURL } from './PageBlobURL';
+import { AppendBlobURL } from './AppendBlobURL';
 
 export interface IContainerCreateOptions {
   metadata?: IMetadata;
@@ -133,22 +136,6 @@ export interface IContainerListBlobsSegmentOptions {
  */
 export class ContainerURL extends StorageURL {
   /**
-   * Creates a ContainerURL object from ServiceURL
-   *
-   * @param serviceURL A ServiceURL object
-   * @param containerName A container name
-   */
-  public static fromServiceURL(
-    serviceURL: ServiceURL,
-    containerName: string
-  ): ContainerURL {
-    return new ContainerURL(
-      appendToURLPath(serviceURL.url, encodeURIComponent(containerName)),
-      serviceURL.pipeline
-    );
-  }
-
-  /**
    * containerContext provided by protocol layer.
    *
    * @private
@@ -196,8 +183,8 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async create(
-    aborter: Aborter,
-    options: IContainerCreateOptions = {}
+    options: IContainerCreateOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerCreateResponse> {
     // Spread operator in destructuring assignments,
     // this will filter out unwanted properties from the response object into result object
@@ -205,6 +192,60 @@ export class ContainerURL extends StorageURL {
       ...options,
       abortSignal: aborter
     });
+  }
+
+  /**
+   * Creates a AppendblobURL object.
+   *
+   * @param {string} blobName A block blob name
+   * @returns {AppendBlobURL}
+   * @memberof ContainerURL
+   */
+  public createAppendBlobURL(blobName: string): AppendBlobURL {
+    return new AppendBlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );  }
+
+  /**
+   * Creates a BlockBlobURL object.
+   *
+   * @param {string} blobName A block blob name
+   * @returns {BlockBlobURL}
+   * @memberof ContainerURL
+   */
+  public createBlockBlobURL(blobName: string): BlockBlobURL {
+    return new BlockBlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );
+  }
+
+  /**
+   * Creates a BlobURL object.
+   *
+   * @param {string} blobName A block blob name
+   * @returns {BlobURL}
+   * @memberof ContainerURL
+   */
+  public createBlobURL(blobName: string): BlobURL {
+    return new BlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );  }
+
+  /**
+   * Creates a PageBlobURL object.
+   *
+   * @param {string} blobName A block blob name
+   * @returns {PageBlobURL}
+   * @memberof ContainerURL
+   */
+  public createPageBlobURL(blobName: string): PageBlobURL {
+    return new PageBlobURL(
+      appendToURLPath(this.url, encodeURIComponent(blobName)),
+      this.pipeline
+    );
   }
 
   /**
@@ -219,8 +260,8 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async getProperties(
-    aborter: Aborter,
-    options: IContainerGetPropertiesOptions = {}
+    options: IContainerGetPropertiesOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerGetPropertiesResponse> {
     if (!options.leaseAccessConditions) {
       options.leaseAccessConditions = {};
@@ -244,8 +285,8 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async delete(
-    aborter: Aborter,
-    options: IContainerDeleteMethodOptions = {}
+    options: IContainerDeleteMethodOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerDeleteResponse> {
     if (!options.containerAccessConditions) {
       options.containerAccessConditions = {};
@@ -299,9 +340,9 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async setMetadata(
-    aborter: Aborter,
     metadata?: IMetadata,
-    options: IContainerSetMetadataOptions = {}
+    options: IContainerSetMetadataOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerSetMetadataResponse> {
     if (!options.containerAccessConditions) {
       options.containerAccessConditions = {};
@@ -357,8 +398,8 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async getAccessPolicy(
-    aborter: Aborter,
-    options: IContainerGetAccessPolicyOptions = {}
+    options: IContainerGetAccessPolicyOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<ContainerGetAccessPolicyResponse> {
     if (!options.leaseAccessConditions) {
       options.leaseAccessConditions = {};
@@ -413,10 +454,10 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async setAccessPolicy(
-    aborter: Aborter,
     access?: Models.PublicAccessType,
     containerAcl?: ISignedIdentifier[],
-    options: IContainerSetAccessPolicyOptions = {}
+    options: IContainerSetAccessPolicyOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerSetAccessPolicyResponse> {
     options.containerAccessConditions = options.containerAccessConditions || {};
     const acl: Models.SignedIdentifier[] = [];
@@ -456,10 +497,10 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async acquireLease(
-    aborter: Aborter,
     proposedLeaseId: string,
     duration: number,
-    options: IContainerAcquireLeaseOptions = {}
+    options: IContainerAcquireLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerAcquireLeaseResponse> {
     return this.containerContext.acquireLease({
       abortSignal: aborter,
@@ -482,9 +523,9 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async releaseLease(
-    aborter: Aborter,
     leaseId: string,
-    options: IContainerReleaseLeaseOptions = {}
+    options: IContainerReleaseLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerReleaseLeaseResponse> {
     return this.containerContext.releaseLease(leaseId, {
       abortSignal: aborter,
@@ -504,9 +545,9 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async renewLease(
-    aborter: Aborter,
     leaseId: string,
-    options: IContainerRenewLeaseOptions = {}
+    options: IContainerRenewLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerRenewLeaseResponse> {
     return this.containerContext.renewLease(leaseId, {
       abortSignal: aborter,
@@ -527,9 +568,9 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async breakLease(
-    aborter: Aborter,
     period: number,
-    options: IContainerBreakLeaseOptions = {}
+    options: IContainerBreakLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerBreakLeaseResponse> {
     return this.containerContext.breakLease({
       abortSignal: aborter,
@@ -551,10 +592,10 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async changeLease(
-    aborter: Aborter,
     leaseId: string,
     proposedLeaseId: string,
-    options: IContainerChangeLeaseOptions = {}
+    options: IContainerChangeLeaseOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerChangeLeaseResponse> {
     return this.containerContext.changeLease(leaseId, proposedLeaseId, {
       abortSignal: aborter,
@@ -577,9 +618,9 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async listBlobFlatSegment(
-    aborter: Aborter,
     marker?: string,
-    options: IContainerListBlobsSegmentOptions = {}
+    options: IContainerListBlobsSegmentOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerListBlobFlatSegmentResponse> {
     return this.containerContext.listBlobFlatSegment({
       abortSignal: aborter,
@@ -603,10 +644,10 @@ export class ContainerURL extends StorageURL {
    * @memberof ContainerURL
    */
   public async listBlobHierarchySegment(
-    aborter: Aborter,
     delimiter: string,
     marker?: string,
-    options: IContainerListBlobsSegmentOptions = {}
+    options: IContainerListBlobsSegmentOptions = {},
+    aborter: Aborter = Aborter.none
   ): Promise<Models.ContainerListBlobHierarchySegmentResponse> {
     return this.containerContext.listBlobHierarchySegment(delimiter, {
       abortSignal: aborter,
