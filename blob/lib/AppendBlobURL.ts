@@ -23,6 +23,7 @@ export interface IAppendBlobAppendBlockOptions {
   accessConditions?: IAppendBlobAccessConditions;
   progress?: (progress: TransferProgressEvent) => void;
   transactionalContentMD5?: Uint8Array;
+  abortSignal?: Aborter;
 }
 
 /**
@@ -137,12 +138,11 @@ export class AppendBlobURL extends BlobURL {
   public async appendBlock(
     body: HttpRequestBody,
     contentLength: number,
-    options: IAppendBlobAppendBlockOptions = {},
-    aborter: Aborter = Aborter.none
+    options: IAppendBlobAppendBlockOptions = {}
   ): Promise<Models.AppendBlobAppendBlockResponse> {
     options.accessConditions = options.accessConditions || {};
     return this.appendBlobContext.appendBlock(body, contentLength, {
-      abortSignal: aborter,
+      abortSignal: options.abortSignal,
       appendPositionAccessConditions:
         options.accessConditions.appendPositionAccessConditions,
       leaseAccessConditions: options.accessConditions.leaseAccessConditions,
