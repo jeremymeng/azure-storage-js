@@ -621,7 +621,7 @@ export class ContainerURL extends StorageURL {
     Models.ContainerListBlobFlatSegmentResponse,
     IContainerListBlobsSegmentOptions,
     Models.BlobItem>(
-    (container, aborter, marker, options) => container.listBlobFlatSegment(aborter, marker, options),
+    (container, aborter, _delimiter, marker, options) => container.listBlobFlatSegment(aborter, marker, options),
     (segment) => segment.segment.blobItems
   );
 
@@ -629,21 +629,32 @@ export class ContainerURL extends StorageURL {
     aborter: Aborter,
     options: IContainerListBlobsSegmentOptions = {}
   ) {
-    return ContainerURL.flatListing.listAll(this, aborter, options);
+    return ContainerURL.flatListing.listAll(this, aborter, "", options);
   }
 
-  // private static readonly hierarchyListing = new ItemLists<
-  //   ContainerURL,
-  //   Models.ContainerListBlobHierarchySegmentResponse,
-  //   IContainerListBlobsSegmentOptions,
-  //   Models.BlobItem>(
-  //   (container, aborter, delimiter, marker, options) => container.listBlobHierarchySegment(aborter, delimiter, marker, options); // TODO: extra `delimiter` parameter!!
-  //   (segment) => segment.segment.blobItems // TODO: the result has two arrays.  How do we deal with such a case?
-  // );
-  // public listAllBlobsWithHierarchy(
-  //   aborter: Aborter,
-  //   options: IContainerListBlobsSegmentOptions = {}
-  // ) {
-  //   return hierarchyListing.listAll(aborter, options);
-  // }
+  private static readonly hierarchyListing = new ItemLists<
+    ContainerURL,
+    Models.ContainerListBlobHierarchySegmentResponse,
+    IContainerListBlobsSegmentOptions,
+    { blobPrefix: Models.BlobPrefix, blobItem: Models.BlobItem }>(
+    (container, aborter, delimiter, marker, options) => container.listBlobHierarchySegment(aborter, delimiter, marker, options), // TODO: extra `delimiter` parameter!!
+    (segment) => {
+      let all: { blobItem: Models.BlobItem, blobPrefix: Models.BlobPrefix }[] = [];
+      for (const [key, value] of segment.segment.blobItems.entries()) {
+        all = all.concat({
+          blobPrefix: segment.segment.blobPrefixes![key],
+          blobItem: value,
+        });
+      }
+      return all;
+    }
+  );
+
+  public listAllBlobsWithHierarchy(
+    aborter: Aborter,
+    delimiter: string,
+    options: IContainerListBlobsSegmentOptions = {}
+  ) {
+    return ContainerURL.hierarchyListing.listAll(this, aborter, delimiter, options);
+  }
 }

@@ -7,7 +7,7 @@ export class ItemLists<TContainer, TSegmentResponse, TServiceListSegmentOptions,
    * @memberof ItemLists
    */
   constructor(
-    private readonly segmentsFunc: (container: TContainer, aborter: Aborter, marker: string | undefined, options?: TServiceListSegmentOptions | {}) => Promise<TSegmentResponse>,
+    private readonly segmentsFunc: (container: TContainer, aborter: Aborter, delimiter: string, marker: string | undefined, options?: TServiceListSegmentOptions | {}) => Promise<TSegmentResponse>,
     private readonly itemsFunc: (segment: TSegmentResponse) => IterableIterator<TItem> | TItem[]) {
   }
 
@@ -19,11 +19,11 @@ export class ItemLists<TContainer, TSegmentResponse, TServiceListSegmentOptions,
    * @returns {AsyncIterableIterator<TSegmentResponse>}
    * @memberof ItemLists
    */
-  async *listSegments(container: TContainer, aborter: Aborter, options: TServiceListSegmentOptions | {} = {}): AsyncIterableIterator<TSegmentResponse> {
+  async *listSegments(container: TContainer, aborter: Aborter, delimiter: string, options: TServiceListSegmentOptions | {} = {}): AsyncIterableIterator<TSegmentResponse> {
     let marker: string | undefined;
     do {
       // TODO: do we need to handle aborter signal?
-      yield await this.segmentsFunc(container, aborter, marker, options);
+      yield await this.segmentsFunc(container, aborter, delimiter, marker, options);
     } while (marker);
   }
 
@@ -35,8 +35,8 @@ export class ItemLists<TContainer, TSegmentResponse, TServiceListSegmentOptions,
    * @returns {AsyncIterableIterator<TItem>}
    * @memberof ItemLists
    */
-  async *listItems(container: TContainer, aborter: Aborter, options: TServiceListSegmentOptions | {} = {}): AsyncIterableIterator<TItem> {
-    for await (const segment of this.listSegments(container, aborter, options)) {
+  async *listItems(container: TContainer, aborter: Aborter, delimiter: string, options: TServiceListSegmentOptions | {} = {}): AsyncIterableIterator<TItem> {
+    for await (const segment of this.listSegments(container, aborter, delimiter, options)) {
       // TODO: do we need to handle aborter signal?
       yield* this.itemsFunc(segment);
     }
@@ -50,11 +50,11 @@ export class ItemLists<TContainer, TSegmentResponse, TServiceListSegmentOptions,
    * @returns
    * @memberof ItemLists
    */
-  public listAll(container: TContainer, aborter: Aborter, options: TServiceListSegmentOptions | {} = {}) {
+  public listAll(container: TContainer, aborter: Aborter, delimiter: string, options: TServiceListSegmentOptions | {} = {}) {
     const that = this;
     return {
-      [Symbol.asyncIterator]: () => that.listItems(container, aborter, options),
-      Segments: () => that.listSegments(container, aborter, options),
+      [Symbol.asyncIterator]: () => that.listItems(container, aborter, delimiter, options),
+      Segments: () => that.listSegments(container, aborter, delimiter, options),
       then(onfulfiled?: ((value: TItem[]) => TItem[] | PromiseLike<TItem[]>) | undefined | null, onrejected?: ((reason: any) => never | PromiseLike<never>) | undefined | null) {
         let all: TItem[] = [];
         return new Promise<TItem[]>(async (resolve) => {

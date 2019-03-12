@@ -225,11 +225,11 @@ export class ServiceURL extends StorageURL {
 
   async *test() {
     const listing = new ItemLists<ServiceURL, Models.ListContainersSegmentResponse, IServiceListContainersSegmentOptions, Models.ContainerItem>(
-      (container, aborter, marker, options) => container.listContainersSegment(aborter, marker, options),
+      (container, aborter, _delimiter, marker, options) => container.listContainersSegment(aborter, marker, options),
       (segment: Models.ListContainersSegmentResponse) => segment.containerItems
     );
 
-    for await (const c of listing.listAll(this, Aborter.none)) {
+    for await (const c of listing.listAll(this, Aborter.none, "")) {
       yield c;
     }
   }
