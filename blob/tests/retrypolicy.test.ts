@@ -35,9 +35,9 @@ describe("RetryPolicy", () => {
         );
       }
     });
-    const factories = containerURL.pipeline.factories.slice(); // clone factories array
+    const factories = containerURL.pipeline.requestPolicyFactories!.slice(); // clone factories array
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectContainerURL = containerURL.withPipeline(pipeline);
 
     const metadata = {
@@ -56,15 +56,15 @@ describe("RetryPolicy", () => {
       return new RestError("Server Internal Error", "ServerInternalError", 500);
     });
 
-    const credential =
-      containerURL.pipeline.factories[
-        containerURL.pipeline.factories.length - 1
-      ];
-    const factories = StorageURL.newPipeline(credential, {
+    let factories = containerURL.pipeline.requestPolicyFactories!;
+    const credential = factories[factories.length - 1];
+    factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 3 }
-    }).factories;
+    }).requestPolicyFactories!;
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = {
+      requestPolicyFactories: factories
+    };
     const injectContainerURL = containerURL.withPipeline(pipeline);
 
     let hasError = false;
@@ -102,15 +102,13 @@ describe("RetryPolicy", () => {
     hostParts.unshift(secondaryAccount);
     const secondaryHost = hostParts.join(".");
 
-    const credential =
-      containerURL.pipeline.factories[
-        containerURL.pipeline.factories.length - 1
-      ];
-    const factories = StorageURL.newPipeline(credential, {
+    let factories = containerURL.pipeline.requestPolicyFactories!;
+    const credential = factories[factories.length - 1];
+    factories = StorageURL.newPipeline(credential, {
       retryOptions: { maxTries: 2, secondaryHost }
-    }).factories;
+    }).requestPolicyFactories!;
     factories.push(injector);
-    const pipeline = new Pipeline(factories);
+    const pipeline: Pipeline = { requestPolicyFactories: factories };
     const injectContainerURL = containerURL.withPipeline(pipeline);
 
     let finalRequestURL = "";

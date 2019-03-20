@@ -1,4 +1,4 @@
-import { deserializationPolicy, RequestPolicyFactory } from "@azure/ms-rest-js";
+import { deserializationPolicy } from "@azure/ms-rest-js";
 
 import { BrowserPolicyFactory } from "./BrowserPolicyFactory";
 import { Credential } from "./credentials/Credential";
@@ -47,18 +47,18 @@ export abstract class StorageURL {
    *
    * @static
    * @param {Credential} credential Such as AnonymousCredential, SharedKeyCredential or TokenCredential.
-   * @param {INewPipelineOptions} [pipelineOptions] Optional. Options.
+   * @param {INewPipelineOptions} [pipelineOptions] Optional Options to create the Pipeline.
    * @returns {Pipeline} A new Pipeline object.
-   * @memberof Pipeline
+   * @memberof StorageURL
    */
   public static newPipeline(
     credential: Credential,
     pipelineOptions: INewPipelineOptions = {}
-  ): Pipeline {
+    ): Pipeline {
     // Order is important. Closer to the API at the top & closer to the network at the bottom.
     // The credential's policy factory must appear close to the wire so it can sign any
     // changes made by other factories (like UniqueRequestIDPolicyFactory)
-    const factories: RequestPolicyFactory[] = [
+    const requestPolicyFactories = [
       new TelemetryPolicyFactory(pipelineOptions.telemetry),
       new UniqueRequestIDPolicyFactory(),
       new BrowserPolicyFactory(),
@@ -68,10 +68,11 @@ export abstract class StorageURL {
       credential
     ];
 
-    return new Pipeline(factories, {
-      HTTPClient: pipelineOptions.httpClient,
-      logger: pipelineOptions.logger
-    });
+    return {
+      httpClient: pipelineOptions.httpClient,
+      httpPipelineLogger: pipelineOptions.logger,
+      requestPolicyFactories,
+    };
   }
 
   /**
@@ -113,7 +114,7 @@ export abstract class StorageURL {
     this.pipeline = pipeline;
     this.storageClientContext = new StorageClientContext(
       this.url,
-      pipeline.toServiceClientOptions()
+      pipeline
     );
 
     // Override protocol layer's default content-type
